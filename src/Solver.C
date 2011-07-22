@@ -741,6 +741,7 @@ Clause* Solver::propagate() {
                 c.getGainedProps() += (propagations - backup.propagations);
                 c.getGainedBogoProps() += (bogoProps - backup.bogoProps);
                 c.getGainedDecisions() += (decisions - backup.decisions);
+                c.getNumConflicted()++;
 
                 //Restore misc state
                 propagations = backup.propagations;
@@ -796,6 +797,16 @@ struct reduceDB_lt {
     return x->size() < y->size();
   }};
 
+struct gainedSorter {
+    bool operator () (Clause* x, Clause* y) {
+        //int64_t actX = x->getGainedBogoProps() + x->getGainedDecisions()*200;
+        //int64_t actY = y->getGainedBogoProps() + y->getGainedDecisions()*200;
+        //if (actX > actY) return 0;
+        //if (actX < actY) return 1;
+        return (x->getGainedBogoProps() > y->getGainedBogoProps());
+    }
+};
+
 
 
 
@@ -805,6 +816,15 @@ void Solver::reduceDB()
 
 
     nbReduceDB++;
+    vec<Clause*> backupLearnts;
+    backupLearnts = learnts;
+    sort(backupLearnts, gainedSorter());
+    for(int i = 0; i < backupLearnts.size(); i++) {
+        Clause* c = backupLearnts[i];
+        printf("Clause size %d glue %d numConflicted %d gainedProps %d gainedBogoProps %d gainedDecisions %d\n", c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
+    }
+    exit(-1);
+
     sort(learnts, reduceDB_lt());
 
     for (i = j = 0; i < learnts.size() / RATIOREMOVECLAUSES; i++){

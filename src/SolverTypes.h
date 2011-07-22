@@ -104,6 +104,7 @@ class Clause {
     uint32_t gainedProps;
     uint32_t gainedDecisions;
     uint32_t gainedBogoProps;
+    uint32_t numConflicted;
     uint32_t size_etc;
     union { int act; uint32_t abst; } extra;
     uint32_t oldSize;
@@ -118,14 +119,17 @@ public:
 
     // NOTE: This constructor cannot be used directly (doesn't allocate enough memory).
     template<class V>
-    Clause(const V& ps, bool learnt) {
-        gainedDecisions = 0;
-        gainedProps = 0;
-        gainedBogoProps = 0;
+    Clause(const V& ps, bool learnt) :
+        gainedDecisions(0)
+        , gainedProps(0)
+        , gainedBogoProps(0)
+        , numConflicted(0)
+    {
         size_etc = (ps.size() << 3) | (uint32_t)learnt;
         oldSize = ps.size();
         for (int i = 0; i < ps.size(); i++) data[i] = ps[i];
-        if (learnt) extra.act = 0; else calcAbstraction(); }
+        if (learnt) extra.act = 0; else calcAbstraction();
+    }
 
     // -- use this function instead:
     template<class V>
@@ -167,6 +171,11 @@ public:
     uint32_t& getGainedBogoProps()
     {
         return gainedBogoProps;
+    }
+
+    uint32_t& getNumConflicted()
+    {
+        return numConflicted;
     }
 
     void saveLiterals()
