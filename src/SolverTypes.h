@@ -105,8 +105,7 @@ class Clause {
     uint32_t gainedDecisions;
     uint32_t size_etc;
     union { int act; uint32_t abst; } extra;
-    float oldact;
-    std::vector<Lit> literals;
+    uint32_t oldSize;
     Lit     data[0];
 
 public:
@@ -122,8 +121,8 @@ public:
         gainedDecisions = 0;
         gainedProps = 0;
         size_etc = (ps.size() << 3) | (uint32_t)learnt;
+        oldSize = ps.size();
         for (int i = 0; i < ps.size(); i++) data[i] = ps[i];
-	oldact = 0.0;
         if (learnt) extra.act = 0; else calcAbstraction(); }
 
     // -- use this function instead:
@@ -131,7 +130,7 @@ public:
     friend Clause* Clause_new(const V& ps, bool learnt = false) {
         assert(sizeof(Lit)      == sizeof(uint32_t));
         assert(sizeof(float)    == sizeof(uint32_t));
-        void* mem = malloc(sizeof(Clause) + sizeof(uint32_t)*(ps.size()));
+        void* mem = malloc(sizeof(Clause) + 2*sizeof(uint32_t)*(ps.size()));
         return new (mem) Clause(ps, learnt); }
 
     int          size        ()      const   { return size_etc >> 3; }
@@ -149,7 +148,6 @@ public:
     operator const Lit* (void) const         { return data; }
 	void        setActivity(int i)  {extra.act = i;} // LS
     int&       activity    ()              { return extra.act; }
-    float&       oldActivity    ()              { return oldact; }
 #ifdef LS_STATS_NBBUMP
     unsigned long long& nbBump() {return nbB;}
 #endif
@@ -164,15 +162,17 @@ public:
         return gainedDecisions;
     }
 
-    std::vector<Lit>& getLiterals() {
-        return literals;
-    }
-
     void saveLiterals()
     {
+        assert(size() == oldSize);
         assert(size() > 0);
-        literals.resize(size());
-        memcpy(&literals[0], data, size()*sizeof(Lit));
+        memcpy(&data[oldSize], &data[0], size()*sizeof(Lit));
+    }
+
+    void restoreLiterals()
+    {
+        assert(size() > 0);
+        memcpy(&data[0], &data[oldSize], size()*sizeof(Lit));
     }
 };
 

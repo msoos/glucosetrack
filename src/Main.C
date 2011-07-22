@@ -223,6 +223,7 @@ void printUsage(char** argv)
     reportf("  -decay         = <num> [ 0 - 1 ]\n");
     reportf("  -rnd-freq      = <num> [ 0 - 1 ]\n");
     reportf("  -verbosity     = {0,1,2}\n");
+    reportf("  -track\n");
     reportf("\n");
 }
 
@@ -277,6 +278,8 @@ int main(int argc, char** argv)
                 reportf("ERROR! illegal verbosity level %s\n", value);
                 exit(0); }
             S.verbosity = verbosity;
+        }else if ((value = hasPrefix(argv[i], "-track"))){
+            S.track(true);
 
         }else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0){
             printUsage(argv);
@@ -292,7 +295,7 @@ int main(int argc, char** argv)
     argc = j;
 
 
-    reportf("\nc This is glucose 1.0 --  based on MiniSAT (Many thanks to MiniSAT team)\n\n"); 
+    reportf("\nc This is glucose 1.0 --  based on MiniSAT (Many thanks to MiniSAT team)\n\n");
 #if defined(__linux__)
     fpu_control_t oldcw, newcw;
     _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
@@ -304,7 +307,7 @@ int main(int argc, char** argv)
     signal(SIGINT,SIGINT_handler);
     signal(SIGHUP,SIGINT_handler);
     signal(SIGXCPU,SIGINT_handler);
-    
+
     if (argc == 1)
         reportf("Reading from standard input... Use '-h' or '--help' for help.\n");
 

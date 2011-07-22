@@ -53,6 +53,7 @@ public:
     bool    solve        (const vec<Lit>& assumps); // Search for a model that respects a given set of assumptions.
     bool    solve        ();                        // Search without assumptions.
     bool    okay         () const;                  // FALSE means solver is in a conflicting state
+    void track(const bool value);
 
     // Variable mode:
     //
@@ -114,13 +115,15 @@ protected:
 
     struct BackupData {
         BackupData(VarOrderLt _order_heap) :
-            order_heap(_order_heap)
+            running(0)
+            , order_heap(_order_heap)
             , sublevel(0)
             , level (0)
             , detachedClause(NULL)
             , stage(0)
         {}
 
+        bool running;
         int stage;
         Clause* detachedClause;
 
@@ -130,19 +133,19 @@ protected:
         //When coming back, what wast the number of props and decisions?
         int sublevel;
         int level;
+
+        //When we didn't make the conflict, what was the number of propagations & decisions?
         uint64_t propagations;
         uint64_t decisions;
-
-        //When NOT making the conflict, what is the status?
-        uint64_t morePropagations;
-        uint64_t moreDecisions;
+        double random_seed;
+        int64_t simpDB_props;
     };
-    
+
     struct WatchesBackup
     {
         vec<int> changed;
         vec<vec<Watched> > ws;
-        vec<char> flags;  
+        vec<char> flags;
     };
 
     // Solver state:
@@ -217,8 +220,6 @@ protected:
     //
     void     varDecayActivity ();                      // Decay all variables with the specified factor. Implemented by increasing the 'bump' value instead.
     void     varBumpActivity  (Var v);                 // Increase a variable with the current 'bump' value.
-    void     claDecayActivity ();                      // Decay all clauses with the specified factor. Implemented by increasing the 'bump' value instead.
-    void     claBumpActivity  (Clause& c);             // Increase a clause with the current 'bump' value.
 
     // Operations on clauses:
     //
@@ -275,17 +276,6 @@ inline void Solver::varBumpActivity(Var v) {
     // Update order_heap with respect to new activity:
     if (order_heap.inHeap(v))
         order_heap.decrease(v); }
-
-inline void Solver::claDecayActivity() { cla_inc *= clause_decay; }
-inline void Solver::claBumpActivity (Clause& c) {  // LS
-#ifdef LS_STATS_NBBUMP
-	c.nbBump()++;
-#endif
-        if ( (c.oldActivity() += cla_inc) > 1e20 ) {
-            // Rescale:
-            for (int i = 0; i < learnts.size(); i++)
-                learnts[i]->oldActivity() *= 1e-20;
-		cla_inc *= 1e-20; } }
 
 inline bool     Solver::enqueue         (Lit p, Clause* from)   { return value(p) != l_Undef ? value(p) != l_False : (uncheckedEnqueue(p, from), true); }
 inline bool     Solver::locked          (const Clause& c) const { return reason[var(c[0])] == &c && value(c[0]) == l_True; }
@@ -356,6 +346,11 @@ inline void Solver::printClause(const C& c)
         printf(" ");
     }
     printf("\n");
+}
+
+inline void Solver::track(const bool value)
+{
+    backup.running = true;
 }
 
 

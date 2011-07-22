@@ -58,15 +58,12 @@ void Solver::saveState()
     watchBackup.changed.clear();
 
     backup.touchedClauses.clear();
-    backup.detachedClause = NULL;
-    backup.propagations = propagations;
-    backup.decisions = decisions;
     backup.sublevel = trail.size();
     backup.level = decisionLevel();
 }
 
 //#define RESTORE
-#define RESTORE_FULL
+//#define RESTORE_FULL
 
 
 Solver::Solver() :
@@ -251,6 +248,7 @@ void Solver::cancelUntil(int level) {
 //
 void Solver::fullCancelUntil(int level, int sublevel)
 {
+    assert(backup.running);
     #ifdef RESTORE_FULL
         printf("Full cancelling until sublevel %d, level: %d .:. currentsubDeclevel: %d, currentDeclevel: %d\n", sublevel, level, trail.size(), decisionLevel());
     #endif
@@ -278,19 +276,8 @@ void Solver::fullCancelUntil(int level, int sublevel)
 
     //Restore clauses
     for (std::set<Clause*>::const_iterator it = backup.touchedClauses.begin(), end = backup.touchedClauses.end(); it != end; it++) {
-        Clause& c = **it;
-        assert(c.size() == c.getLiterals().size());
-        for(int i = 0; i < c.getLiterals().size(); i++) {
-            c[i] = c.getLiterals()[i];
-        }
+        (*it)->restoreLiterals();;
     }
-
-    //Restore var-activity heap (NOTE: var activities have _not_ been touched)
-    order_heap = backup.order_heap;
-
-    //Reset statistics
-    propagations = backup.propagations;
-    decisions = backup.decisions;
 
     qhead = sublevel-1;
     trail.shrink(trail.size() - sublevel);
@@ -308,13 +295,22 @@ void Solver::fullCancelUntil(int level, int sublevel)
 Lit Solver::pickBranchLit(int polarity_mode, double random_var_freq)
 {
     Var next = var_Undef;
+    /*if (backup.stage == 0) {
+        assert(order_heap.heapProperty());
+        for(int i = 0; i < std::min(order_heap.size(), 10); i++) {
+            printf("order_heap %d has var %d, has activity %lf\n", i, order_heap[i], activity[order_heap[i]]);
+        }
+    }*/
 
     // Random decision:
-    /*if ((drand(random_seed) < random_var_freq) && !order_heap.empty()){
-
-      next = order_heap[irand(random_seed,order_heap.size())];
-      if (toLbool(assigns[next]) == l_Undef && decision_var[next])
-        rnd_decisions++; }*/
+    if (false
+        && drand(random_seed) < random_var_freq
+        && !order_heap.empty()
+    ){
+        next = order_heap[irand(random_seed,order_heap.size())];
+        if (toLbool(assigns[next]) == l_Undef && decision_var[next])
+            rnd_decisions++;
+    }
 
     // Activity based decision:
     while (next == var_Undef || toLbool(assigns[next]) != l_Undef || !decision_var[next])
@@ -333,7 +329,9 @@ Lit Solver::pickBranchLit(int polarity_mode, double random_var_freq)
     default: assert(false); }
 
     #ifdef RESTORE
-    printf("--> Picking decision lit "); printLit(Lit(next, sign)); printf(" at decision level: %d\n", decisionLevel());
+    if (backup.stage == 0) {
+        printf("--> Picking decision lit "); printLit(Lit(next, sign)); printf(" at decision level: %d, sublevel: %d\n", decisionLevel(), trail.size());
+    }
     #endif
 
     return next == var_Undef ? lit_Undef : Lit(next, sign);
@@ -377,9 +375,6 @@ void Solver::analyze(Clause* confl, vec<Lit>& out_learnt, int& out_btlevel,int &
         Lit tmp = c[0];
         c[0] =  c[1], c[1] = tmp;
       }
-
-      if (c.learnt())
-        claBumpActivity(c);
 
       for (int j = (p == lit_Undef) ? 0 : 1; j < c.size(); j++){
         Lit q = c[j];
@@ -575,7 +570,9 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
 void Solver::uncheckedEnqueue(Lit p, Clause* from)
 {
     #ifdef RESTORE
-    printf("setting lit "); printLit(p); printf(" decLevel: %d flag: %d detachedClause: %p\n", decisionLevel(), backup.stage, backup.detachedClause);
+    if (backup.stage == 0) {
+        printf("setting lit "); printLit(p); printf(" decLevel: %d flag: %d detachedClause: %p\n", decisionLevel(), backup.stage, backup.detachedClause);
+    }
     #endif
 
     assert(value(p) == l_Undef);
@@ -624,38 +621,26 @@ Clause* Solver::propagate() {
       }
     }
 
-    if (watchBackup.flags[toInt(p)] == false) {
-        #ifdef RESTORE
-        printf("Saving watch num %d\n", toInt(p));
-        #endif
+    if (backup.running
+        && watchBackup.flags[toInt(p)] == false
+    ) {
         watchBackup.ws[toInt(p)] = watches[toInt(p)];
         watchBackup.flags[toInt(p)] = true;
         watchBackup.changed.push(toInt(p));
     }
 
     for (i = j = (Watched*)ws, end = i + ws.size();  i != end;){
-        #ifdef RESTORE
-        printf("End of watch: %p\n", end);
-        printf("Next in this watch: cl: %p blit: ", i->wcl); printLit(i->blocked);printf("\n");
-        #endif
       if(value(i->blocked)==l_True) { // Clause is sat
-          #ifdef RESTORE
-          printf("Blocked, going through\n");
-          #endif
         *j++ = *i++;
         continue;
-      } else {
-          #ifdef RESTORE
-          printf("Not blocked, taking a peek\n");
-          #endif
       }
       Lit bl = i->blocked;
       Clause& c = *(i->wcl);
       i++;
-      #ifdef RESTORE
-      printf("Looking through clause: ");printClause(c);
-      #endif
-      if (backup.touchedClauses.find(&c) == backup.touchedClauses.end()) {
+
+      if (backup.running
+          && backup.touchedClauses.find(&c) == backup.touchedClauses.end()
+      ) {
           backup.touchedClauses.insert(&c);
           c.saveLiterals();
       }
@@ -678,9 +663,12 @@ Clause* Solver::propagate() {
         for (int k = 2; k < c.size(); k++)
           if (value(c[k]) != l_False){
             c[1] = c[k]; c[k] = false_lit;
-            //Save!
-            int wsNum = toInt(~c[1]);
-            if (watchBackup.flags[wsNum] == false) {
+
+            const int wsNum = toInt(~c[1]);
+            //Save ws before changing it
+            if (backup.running
+                && watchBackup.flags[wsNum] == false
+            ) {
                 watchBackup.ws[wsNum] = watches[wsNum];
                 watchBackup.flags[wsNum] = true;
                 watchBackup.changed.push(wsNum);
@@ -698,7 +686,8 @@ Clause* Solver::propagate() {
 
         if (value(first) == l_False){
             //Conflict detected, but not acted upon.
-            if (c.learnt()
+            if (backup.running
+                && c.learnt()
                 && backup.stage == 0
                 && decisionLevel() > 0
             ) {
@@ -707,13 +696,18 @@ Clause* Solver::propagate() {
                 //printClause(c);
                 #endif
                 backup.order_heap = order_heap;
-                backup.moreDecisions = decisions;
-                backup.morePropagations = propagations;
                 backup.detachedClause = &c;
                 backup.stage = 1;
+
+                //Save misc state
+                backup.propagations = propagations;
+                backup.decisions = decisions;
+                backup.simpDB_props = simpDB_props;
+                backup.random_seed = random_seed;
             }
 
-            if (c.learnt()
+            if (backup.running
+                && c.learnt()
                 && backup.stage == 1
                 && decisionLevel() > 0
                 && &c == backup.detachedClause
@@ -724,7 +718,8 @@ Clause* Solver::propagate() {
                 goto here;
             }
 
-            if (c.learnt()
+            if (backup.running
+                && c.learnt()
                 && backup.stage == 2
                 && decisionLevel() > 0
             ) {
@@ -734,12 +729,19 @@ Clause* Solver::propagate() {
                 printf("Now clause %p is making the conflict it wanted to make earlier. declevel: %d trail: %d \n", backup.detachedClause, decisionLevel(), trail.size());
                 //printClause(*backup.detachedClause);
                 #endif
-            }
+                backup.detachedClause = NULL;
+                assert(backup.decisions <= decisions);
+                assert(backup.propagations <= propagations);
 
-            if (backup.stage == 1) {
-                #ifdef RESTORE_FULL
-                //printf("Something else is conflicting instead of clause %p, decLevel: %d trail: %d level!\n", backup.detachedClause, decisionLevel(), trail.size());
-                #endif
+                c.getGainedDecisions() += (decisions - backup.decisions);
+                c.getGainedProps() += (propagations - backup.propagations);
+
+                //Restore misc state
+                decisions = backup.decisions;
+                propagations = backup.propagations;
+                simpDB_props = backup.simpDB_props;
+                random_seed = backup.random_seed;
+                order_heap = backup.order_heap;
             }
 
             confl = &c;
@@ -784,7 +786,6 @@ struct reduceDB_lt {
     if(x->activity()> y->activity()) return 1;
     if(x->activity()< y->activity()) return 0;
 
-    //    return x->oldActivity() < y->oldActivity();
     return x->size() < y->size();
   }};
 
@@ -892,23 +893,23 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
         Clause* confl = propagate();
 
         //Conflict at a later stage.
-        if (confl != NULL
+        if (backup.running
+            && confl != NULL
             && backup.stage == 1
         ) {
             #ifdef RESTORE_FULL
             printf("Somebody else (maybe bin clause) did the conflict -- stage is one, going 2\n");
             #endif
-            backup.detachedClause->getGainedProps() = backup.morePropagations - backup.propagations;
-            backup.detachedClause->getGainedDecisions() = backup.moreDecisions - backup.decisions;
             fullCancelUntil(backup.level, backup.sublevel);
-            confl = NULL;
             backup.stage = 2;
             continue;
         }
 
         if (confl != NULL){
+            assert(backup.stage == 0);
+
             // CONFLICT
-          conflicts++; conflictsC++;cons++;nbCC++;
+            conflicts++; conflictsC++;cons++;nbCC++;
             if (decisionLevel() == 0) return l_False;
 
             first = false;
@@ -935,11 +936,12 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
               if(nblevels<=2) nbDL2++;
               if(c->size()==2) nbBin++;
               attachClause(*c);
-              claBumpActivity(*c);
 
               uncheckedEnqueue(learnt_clause[0], c);
 
-              if (backup.stage == 0) {
+              if (backup.running
+                  && backup.stage == 0
+              ) {
                   saveState();
                   #ifdef RESTORE
                   printf("Saving state after conflict at dec level: %d, sublevel: %d\n", decisionLevel(), trail.size());
@@ -947,26 +949,28 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
               }
             }
               varDecayActivity();
-              claDecayActivity();
         }else{
-          if (backup.stage == 0
+            if (backup.stage == 0
               && nbDecisionLevelHistory.isvalid()
               && ((nbDecisionLevelHistory.getavg()*0.7) > (totalSumOfDecisionLevel / conf4Stats))
-          ) {
+            ) {
               nbDecisionLevelHistory.fastclear();
               progress_estimate = progressEstimate();
               cancelUntil(0);
               return l_Undef;
-          }
+            }
 
             // Simplify the set of problem clauses:
-            if (decisionLevel() == 0 && !simplify())
+            if (backup.stage == 0
+                && decisionLevel() == 0 && !simplify()
+            ) {
                 return l_False;
+            }
 
             Lit next = lit_Undef;
 
             if (backup.stage == 0
-                && cons-curRestart* nbclausesbeforereduce>=0
+                && ((cons-curRestart * nbclausesbeforereduce) >=0)
             ) {
                 curRestart = (conflicts/ nbclausesbeforereduce)+1;
                 reduceDB();
@@ -989,7 +993,9 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
             newDecisionLevel();
             uncheckedEnqueue(next);
 
-            if (backup.stage == 0) {
+            if (backup.running
+                && backup.stage == 0
+            ) {
                 saveState();
                 #ifdef RESTORE
                 printf("Saving state after pickbranch at dec level: %d, sublevel: %d\n", decisionLevel(), trail.size());

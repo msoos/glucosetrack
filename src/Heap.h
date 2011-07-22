@@ -76,6 +76,7 @@ class Heap {
     Heap<Comp>& operator=(const Heap<Comp>& other) {
         heap = other.heap;
         indices = other.indices;
+        return *this;
     }
 
     int  size      ()          const { return heap.size(); }

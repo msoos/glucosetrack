@@ -56,12 +56,13 @@ public:
     {
         if (cap < other.sz) {
             free(data);
-            data = (T*)malloc(other.cap * sizeof(T));
-            cap = other.cap;
+            data = (T*)malloc(other.sz * sizeof(T));
+            cap = other.sz;
         }
 
         for (int i = 0; i < other.sz; i ++) data[i] = other[i];
         sz = other.sz;
+        return *this;
     }
 
     vec(const vec<T>& other) {
