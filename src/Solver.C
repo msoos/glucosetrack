@@ -688,16 +688,15 @@ Clause* Solver::propagate() {
             if (c.learnt()
                 && backup.stage == 0
                 && decisionLevel() > 0
-                && (&c != backup.detachedClause)
             ) {
                 #ifdef RESTORE_FULL
                 printf("Learnt clause %p wanted to make a conflict! declevel: %d trail: %d\n", &c, decisionLevel(), trail.size());
                 //printClause(c);
                 #endif
-                backup.needToDetach = true;
+                backup.moreDecisions = decisions;
+                backup.morePropagations = propagations;
                 backup.detachedClause = &c;
                 backup.stage = 1;
-                return NULL;
             }
 
             if (c.learnt()
@@ -705,7 +704,6 @@ Clause* Solver::propagate() {
                 && decisionLevel() > 0
                 && &c == backup.detachedClause
             ) {
-                backup.needToDetach = false;
                 #ifdef RESTORE_FULL
                 printf("Skipping over conflicting with clause %p\n", backup.detachedClause);
                 #endif
@@ -878,21 +876,6 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
 
     for (;;){
         Clause* confl = propagate();
-
-        //Conflict detected, but not acted upon. Detach needed
-        if (confl == NULL
-            && backup.stage == 1
-            && backup.needToDetach
-        ) {
-            backup.needToDetach = false;
-
-            //Save intermediary dec & prop
-            backup.moreDecisions = decisions;
-            backup.morePropagations = propagations;
-
-            fullCancelUntil(backup.level, backup.sublevel);
-            continue;
-        }
 
         //Conflict at a later stage.
         if (confl != NULL

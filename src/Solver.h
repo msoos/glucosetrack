@@ -118,7 +118,6 @@ protected:
             , sublevel(0)
             , level (0)
             , detachedClause(NULL)
-            , needToDetach(false)
             , stage(0)
         {}
 
@@ -137,8 +136,6 @@ protected:
         //When NOT making the conflict, what is the status?
         uint64_t morePropagations;
         uint64_t moreDecisions;
-
-        bool needToDetach;
     };
 
     // Solver state:
