@@ -823,7 +823,7 @@ void Solver::reduceDB()
         Clause* c = backupLearnts[i];
         printf("Clause size %d glue %d numConflicted %d gainedProps %d gainedBogoProps %d gainedDecisions %d\n", c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
     }
-    exit(-1);
+    printf("End of this round of database cleaning\n");
 
     sort(learnts, reduceDB_lt());
 
