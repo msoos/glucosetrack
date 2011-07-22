@@ -137,6 +137,13 @@ protected:
         uint64_t morePropagations;
         uint64_t moreDecisions;
     };
+    
+    struct WatchesBackup
+    {
+        vec<int> changed;
+        vec<vec<Watched> > ws;
+        vec<char> flags;  
+    };
 
     // Solver state:
     //
@@ -149,8 +156,7 @@ protected:
     vec<double>         activity;         // A heuristic measurement of the activity of a variable.
     double              var_inc;          // Amount to bump next variable with.
     vec<vec<Watched> > watches;
-    vec<vec<Watched> > watchesBackup;
-    vec<char> watchesFlags;
+    WatchesBackup      watchBackup;
     vec<vec<Binaire> > watchesBin;
     vec<char>           assigns;          // The current assignments (lbool:s stored as char:s).
     vec<char>           polarity;         // The preferred polarity of each variable.

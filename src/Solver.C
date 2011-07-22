@@ -49,14 +49,20 @@ static inline void removeBin(vec<Binaire> &ws,Clause *c) {
 
 void Solver::saveState()
 {
-    for (int i = 0; i < watchesFlags.size(); i++) {
-        watchesFlags[i] = false;
+    for (int i = 0; i < watchBackup.changed.size(); i++) {
+        const int which = watchBackup.changed[i];
+
+        assert(watchBackup.flags[which] == true);
+        watchBackup.flags[which] = false;
     }
-    backup.order_heap = order_heap;
+    watchBackup.changed.clear();
+
     backup.touchedClauses.clear();
     backup.detachedClause = NULL;
     backup.propagations = propagations;
     backup.decisions = decisions;
+    backup.sublevel = trail.size();
+    backup.level = decisionLevel();
 }
 
 //#define RESTORE
@@ -113,12 +119,14 @@ Var Solver::newVar(bool sign, bool dvar)
     int v = nVars();
     watches   .push();          // (list for positive literal)
     watches   .push();          // (list for negative literal)
-    watchesBackup   .push();          // (list for positive literal)
-    watchesBackup   .push();          // (list for negative literal)
     watchesBin   .push();          // (list for negative literal)
     watchesBin   .push();          // (list for negative literal)
-    watchesFlags.push(false);
-    watchesFlags.push(false);
+
+    watchBackup.ws.push();
+    watchBackup.ws.push();
+    watchBackup.flags.push(false);
+    watchBackup.flags.push(false);
+
     reason    .push(NULL);
     assigns   .push(toInt(l_Undef));
     level     .push(-1);
@@ -256,15 +264,17 @@ void Solver::fullCancelUntil(int level, int sublevel)
         //Don't need the line below, because we restore the _full_ order heap
         //insertVarOrder(x);
     }
-    for (int i = 0; i < watchesFlags.size(); i++) {
-        if (watchesFlags[i]) {
-            #ifdef RESTORE
-            printf("Restoring watch number %d\n", i);
-            #endif
-            watches[i] = watchesBackup[i];
-        }
-        watchesFlags[i] = false;
+    for (int i = 0; i < watchBackup.changed.size(); i++) {
+        const int which = watchBackup.changed[i];
+
+        assert(watchBackup.flags[which]);
+        #ifdef RESTORE
+        printf("Restoring watch number %d\n", i);
+        #endif
+        watches[which] = watchBackup.ws[which];
+        watchBackup.flags[which] = false;
     }
+    watchBackup.changed.clear();
 
     //Restore clauses
     for (std::set<Clause*>::const_iterator it = backup.touchedClauses.begin(), end = backup.touchedClauses.end(); it != end; it++) {
@@ -614,12 +624,13 @@ Clause* Solver::propagate() {
       }
     }
 
-    if (watchesFlags[toInt(p)] == false) {
+    if (watchBackup.flags[toInt(p)] == false) {
         #ifdef RESTORE
         printf("Saving watch num %d\n", toInt(p));
         #endif
-        watchesBackup[toInt(p)] = watches[toInt(p)];
-        watchesFlags[toInt(p)] = true;
+        watchBackup.ws[toInt(p)] = watches[toInt(p)];
+        watchBackup.flags[toInt(p)] = true;
+        watchBackup.changed.push(toInt(p));
     }
 
     for (i = j = (Watched*)ws, end = i + ws.size();  i != end;){
@@ -668,14 +679,16 @@ Clause* Solver::propagate() {
           if (value(c[k]) != l_False){
             c[1] = c[k]; c[k] = false_lit;
             //Save!
-            if (watchesFlags[toInt(~c[1])] == false) {
-                watchesBackup[toInt(~c[1])] = watches[toInt(~c[1])];
-                watchesFlags[toInt(~c[1])] = true;
+            int wsNum = toInt(~c[1]);
+            if (watchBackup.flags[wsNum] == false) {
+                watchBackup.ws[wsNum] = watches[wsNum];
+                watchBackup.flags[wsNum] = true;
+                watchBackup.changed.push(wsNum);
             }
 
-            watches[toInt(~c[1])].push();
-            watches[toInt(~c[1])].last().wcl = &c;
-            watches[toInt(~c[1])].last().blocked = c[0];
+            watches[wsNum].push();
+            watches[wsNum].last().wcl = &c;
+            watches[wsNum].last().blocked = c[0];
             goto FoundWatch; }
 
         // Did not find watch -- clause is unit under assignment:
@@ -693,6 +706,7 @@ Clause* Solver::propagate() {
                 printf("Learnt clause %p wanted to make a conflict! declevel: %d trail: %d\n", &c, decisionLevel(), trail.size());
                 //printClause(c);
                 #endif
+                backup.order_heap = order_heap;
                 backup.moreDecisions = decisions;
                 backup.morePropagations = propagations;
                 backup.detachedClause = &c;
@@ -927,8 +941,6 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
 
               if (backup.stage == 0) {
                   saveState();
-                  backup.sublevel = trail.size();
-                  backup.level = decisionLevel();
                   #ifdef RESTORE
                   printf("Saving state after conflict at dec level: %d, sublevel: %d\n", decisionLevel(), trail.size());
                   #endif
@@ -979,8 +991,6 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
 
             if (backup.stage == 0) {
                 saveState();
-                backup.sublevel = trail.size();
-                backup.level = decisionLevel();
                 #ifdef RESTORE
                 printf("Saving state after pickbranch at dec level: %d, sublevel: %d\n", decisionLevel(), trail.size());
                 printf("sublevel: %d, level: %d, qhead:%d\n", trail.size(), decisionLevel(), qhead);
