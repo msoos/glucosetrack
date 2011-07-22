@@ -80,7 +80,7 @@ Solver::Solver() :
 
     // Statistics: (formerly in 'SolverStats')
     //
-    , nbDL2(0),nbBin(0),nbUn(0) , nbReduceDB(0), starts(0), decisions(0), rnd_decisions(0), propagations(0), conflicts(0)
+  , nbDL2(0),nbBin(0),nbUn(0) , nbReduceDB(0), starts(0), decisions(0), rnd_decisions(0), propagations(0), conflicts(0), bogoProps(0)
   , clauses_literals(0), learnts_literals(0), max_literals(0), tot_literals(0)
 
   , ok               (true)
@@ -603,13 +603,16 @@ Clause* Solver::propagate() {
     const Lit      p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
     vec<Watched>&  ws  = watches[toInt(p)];
     Watched         *i, *j, *end;
-    num_props++;
+    propagations++;
+    simpDB_props--;
+
     #ifdef RESTORE
     printf("Propagating lit "); printLit(p); printf(" number: %d\n", toInt(p));
     #endif
 
     const vec<Binaire> & wbin = watchesBin[toInt(p)];
 
+    bogoProps += wbin.size();
     for(int k = 0;k<wbin.size();k++) {
       Lit imp = wbin[k].implied;
       if(value(imp) == l_False) {
@@ -629,6 +632,7 @@ Clause* Solver::propagate() {
         watchBackup.changed.push(toInt(p));
     }
 
+    bogoProps += ws.size();
     for (i = j = (Watched*)ws, end = i + ws.size();  i != end;){
       if(value(i->blocked)==l_True) { // Clause is sat
         *j++ = *i++;
@@ -637,6 +641,7 @@ Clause* Solver::propagate() {
       Lit bl = i->blocked;
       Clause& c = *(i->wcl);
       i++;
+      bogoProps += 5;
 
       if (backup.running
           && backup.touchedClauses.find(&c) == backup.touchedClauses.end()
@@ -701,6 +706,7 @@ Clause* Solver::propagate() {
 
                 //Save misc state
                 backup.propagations = propagations;
+                backup.bogoProps = bogoProps;
                 backup.decisions = decisions;
                 backup.simpDB_props = simpDB_props;
                 backup.random_seed = random_seed;
@@ -729,19 +735,22 @@ Clause* Solver::propagate() {
                 printf("Now clause %p is making the conflict it wanted to make earlier. declevel: %d trail: %d \n", backup.detachedClause, decisionLevel(), trail.size());
                 //printClause(*backup.detachedClause);
                 #endif
-                backup.detachedClause = NULL;
                 assert(backup.decisions <= decisions);
                 assert(backup.propagations <= propagations);
 
-                c.getGainedDecisions() += (decisions - backup.decisions);
                 c.getGainedProps() += (propagations - backup.propagations);
+                c.getGainedBogoProps() += (bogoProps - backup.bogoProps);
+                c.getGainedDecisions() += (decisions - backup.decisions);
 
                 //Restore misc state
-                decisions = backup.decisions;
                 propagations = backup.propagations;
+                bogoProps = backup.bogoProps;
+                decisions = backup.decisions;
                 simpDB_props = backup.simpDB_props;
                 random_seed = backup.random_seed;
+
                 order_heap = backup.order_heap;
+                backup.detachedClause = NULL;
             }
 
             confl = &c;
@@ -758,8 +767,6 @@ Clause* Solver::propagate() {
     }
     ws.shrink(i - j);
   }
-  propagations += num_props;
-  simpDB_props -= num_props;
 
   return confl;
 }

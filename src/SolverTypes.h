@@ -103,6 +103,7 @@ const lbool l_Undef = toLbool( 0);
 class Clause {
     uint32_t gainedProps;
     uint32_t gainedDecisions;
+    uint32_t gainedBogoProps;
     uint32_t size_etc;
     union { int act; uint32_t abst; } extra;
     uint32_t oldSize;
@@ -120,6 +121,7 @@ public:
     Clause(const V& ps, bool learnt) {
         gainedDecisions = 0;
         gainedProps = 0;
+        gainedBogoProps = 0;
         size_etc = (ps.size() << 3) | (uint32_t)learnt;
         oldSize = ps.size();
         for (int i = 0; i < ps.size(); i++) data[i] = ps[i];
@@ -160,6 +162,11 @@ public:
     }
     uint32_t&    getGainedDecisions() {
         return gainedDecisions;
+    }
+
+    uint32_t& getGainedBogoProps()
+    {
+        return gainedBogoProps;
     }
 
     void saveLiterals()

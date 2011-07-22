@@ -93,7 +93,7 @@ public:
 
     // Statistics: (read-only member variable)
     //
-    uint64_t nbDL2,nbBin,nbUn,nbReduceDB,starts, decisions, rnd_decisions, propagations, conflicts;
+    uint64_t nbDL2,nbBin,nbUn,nbReduceDB,starts, decisions, rnd_decisions, propagations, conflicts, bogoProps;
     uint64_t clauses_literals, learnts_literals, max_literals, tot_literals;
 
 protected:
@@ -136,6 +136,7 @@ protected:
 
         //When we didn't make the conflict, what was the number of propagations & decisions?
         uint64_t propagations;
+        uint64_t bogoProps;
         uint64_t decisions;
         double random_seed;
         int64_t simpDB_props;
