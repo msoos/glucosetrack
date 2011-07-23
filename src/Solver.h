@@ -140,6 +140,7 @@ protected:
         uint64_t decisions;
         double random_seed;
         int64_t simpDB_props;
+        vec<char> polarity;
     };
 
     struct WatchesBackup

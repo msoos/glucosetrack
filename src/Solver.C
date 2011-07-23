@@ -75,7 +75,7 @@ Solver::Solver() :
     // More parameters:
     //
   , expensive_ccmin  (true)
-  , polarity_mode    (polarity_false)
+  , polarity_mode    (polarity_user)
   , verbosity        (0)
 
     // Statistics: (formerly in 'SolverStats')
@@ -710,6 +710,7 @@ Clause* Solver::propagate() {
                 backup.decisions = decisions;
                 backup.simpDB_props = simpDB_props;
                 backup.random_seed = random_seed;
+                backup.polarity = polarity;
             }
 
             if (backup.running
@@ -749,6 +750,7 @@ Clause* Solver::propagate() {
                 decisions = backup.decisions;
                 simpDB_props = backup.simpDB_props;
                 random_seed = backup.random_seed;
+                polarity = backup.polarity;
 
                 order_heap = backup.order_heap;
                 backup.detachedClause = NULL;
