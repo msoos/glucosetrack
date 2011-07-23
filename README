@@ -1,0 +1,11 @@
+You must build this package with cmake:
+
+$ cmake .
+$ make
+
+You can use this program like glucose:
+
+./glucose.sh problemname.cnf
+
+The output, however, will regularly contain learnt clause sets with
+their usefulness measures

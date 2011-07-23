@@ -14,8 +14,8 @@ mypath=.
 TMPDIR=/tmp
 
 TMP=$TMPDIR/glucose_$$ #set this to the location of temporary files
-SE=$mypath/SatELite_release           #set this to the executable of SatELite
-RS=$mypath/glucose_static              #set this to the executable of RSat
+SE=$mypath/satelite           #set this to the executable of SatELite
+RS=$mypath/glucose              #set this to the executable of RSat
 INPUT=$1;
 shift 
 echo "c"
@@ -28,7 +28,7 @@ echo "c Starting glucose"
 echo "c"
 if [ $X == 0 ]; then
   #SatElite terminated correctly
-    $RS $TMP.cnf -verbosity=0 $TMP.result "$@" 
+    $RS $TMP.cnf -track $TMP.result "$@" 
     #more $TMP.result
   X=$?
   if [ $X == 20 ]; then

@@ -295,7 +295,9 @@ int main(int argc, char** argv)
     argc = j;
 
 
-    reportf("\nc This is glucose 1.0 --  based on MiniSAT (Many thanks to MiniSAT team)\n\n");
+    reportf("c This is glucose 1.0  with usefulness tracking\n");
+    reportf("c based on glucose, which is in run based on MiniSAT\n");
+    reportf("c Many thanks to all teams\n");
 #if defined(__linux__)
     fpu_control_t oldcw, newcw;
     _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);

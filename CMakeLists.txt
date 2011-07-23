@@ -6,7 +6,7 @@ ELSE()
   SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
-PROJECT(gluecosebetter)
+PROJECT(gluecosemeasure)
 #SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/m4-extra) #m4-extra contains some library search cmake stuff
 
 SET(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -fno-omit-frame-pointer -mtune=native")
@@ -35,4 +35,32 @@ add_dependencies(copy
     glucose
     satelite
 )
+
+#general setup
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Glucose with usefulness measure")
+SET(CPACK_PACKAGE_MAINTAINER "Mate Soos (mate@srlabs.de)")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+SET(CPACK_PACKAGE_VERSION_MAJOR "1")
+SET(CPACK_PACKAGE_VERSION_MINOR "1")
+SET(CPACK_PACKAGE_VERSION_PATCH "0")
+
+
+#tarball generators
+set(CPACK_GENERATOR TGZ)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_IGNORE_FILES
+"~$"
+"^${PROJECT_SOURCE_DIR}/build/"
+"${PROJECT_SOURCE_DIR}/.git/"
+"${PROJECT_SOURCE_DIR}/.kdev4/"
+)
+
+SET(CPACK_PACKAGE_EXECUTABLES "satelite" "glucose")
+set(CPACK_SOURCE_STRIP_FILES 1)
+#INSTALL_TARGETS(/bin glucose)
+#INSTALL_TARGETS(/bin satelite)
+
+INCLUDE(CPack)
+
 
