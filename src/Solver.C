@@ -759,8 +759,27 @@ Clause* Solver::propagate() {
             // Copy the remaining watches:
             while (i < end)
                 *j++ = *i++;
-        }else {
+        } else {
             uncheckedEnqueue(first, &c);
+            #ifdef DYNAMICNBLEVEL
+            if(backup.stage == 0
+                && c.learnt()
+                && c.activity()>2
+            ) {
+                MYFLAG++;
+                int nblevels =0;
+                for(int i=0;i<c.size();i++) {
+                    int l = level[var(c[i])];
+                    if (permDiff[l] != MYFLAG) {
+                        permDiff[l] = MYFLAG;
+                        nblevels++;
+                    }
+                }
+                if(nblevels+1<c.activity()) {
+                    c.setActivity(nblevels);
+                }
+           }
+            #endif
             here:;
         }
       }
