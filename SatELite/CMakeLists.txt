@@ -1,6 +1,6 @@
-include_directories( ${PROJECT_SOURCE_DIR}/satelite/ForMani )
+include_directories( ${PROJECT_SOURCE_DIR}/SatELite/ForMani )
 
-add_executable(sateliteexec
+add_executable(satelite
     SatElite/BcnfWriter.C
     SatElite/Main.C
     SatElite/Main_debug.C
@@ -15,6 +15,6 @@ add_executable(sateliteexec
     ForMani/String.C
 )
 
-target_link_libraries(sateliteexec
+target_link_libraries(satelite
     ${ZLIB_LIBRARY}
 )

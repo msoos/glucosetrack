@@ -20,7 +20,7 @@ link_directories( ${ZLIB_LIBRARY} )
 include_directories( ${ZLIB_INCLUDE_DIR} )
 
 add_subdirectory(src)
-add_subdirectory(satelite)
+add_subdirectory(SatELite)
 
 add_custom_target(copy ALL
     COMMENT "Copying binaries from subdirs to build directory")
@@ -28,11 +28,11 @@ add_custom_target(copy ALL
 add_custom_command(
     TARGET copy
     COMMAND ${CMAKE_COMMAND} -E copy src/glucose .
-    COMMAND ${CMAKE_COMMAND} -E copy satelite/sateliteexec .
+    COMMAND ${CMAKE_COMMAND} -E copy SatELite/satelite .
 )
 
 add_dependencies(copy
     glucose
-    #sateliteexec
+    satelite
 )
 
