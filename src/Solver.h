@@ -113,6 +113,8 @@ protected:
         bool operator()(Var v) const { return toLbool(s.assigns[v]) == l_Undef && s.decision_var[v]; }
     };
 
+    //Backup data to calculate learnt clause usefulness
+    //
     struct BackupData {
         BackupData(VarOrderLt _order_heap) :
             running(0)
@@ -142,6 +144,7 @@ protected:
         int64_t simpDB_props;
         vec<char> polarity;
     };
+    BackupData backup;
 
     struct WatchesBackup
     {
@@ -149,11 +152,12 @@ protected:
         vec<vec<Watched> > ws;
         vec<char> flags;
     };
+    WatchesBackup watchBackup;
+    void printClauseUsefulnessStats();
+    void saveState();
 
     // Solver state:
     //
-    void  saveState();
-    BackupData          backup;
     bool                ok;               // If FALSE, the constraints are already unsatisfiable. No part of the solver state may be used!
     vec<Clause*>        clauses;          // List of problem clauses.
     vec<Clause*>        learnts;          // List of learnt clauses.
@@ -161,7 +165,6 @@ protected:
     vec<double>         activity;         // A heuristic measurement of the activity of a variable.
     double              var_inc;          // Amount to bump next variable with.
     vec<vec<Watched> > watches;
-    WatchesBackup      watchBackup;
     vec<vec<Binaire> > watchesBin;
     vec<char>           assigns;          // The current assignments (lbool:s stored as char:s).
     vec<char>           polarity;         // The preferred polarity of each variable.
@@ -170,13 +173,12 @@ protected:
     vec<int>            trail_lim;        // Separator indices for different decision levels in 'trail'.
     vec<Clause*>        reason;           // 'reason[var]' is the clause that implied the variables current value, or 'NULL' if none.
     vec<int>            level;            // 'level[var]' contains the level at which the assignment was made.
-	vec<unsigned long int> permDiff;      // LS: permDiff[var] contains the current conflict number... Used to count the number of
+    vec<unsigned long int> permDiff;      // LS: permDiff[var] contains the current conflict number... Used to count the number of
 
 #ifdef UPDATEVARACTIVITY
-	vec<Lit> lastDecisionLevel;
+    vec<Lit> lastDecisionLevel;
 #endif
-										  // different decision level variables in learnt clause;
-
+    // different decision level variables in learnt clause;
 
     int                 qhead;            // Head of queue (as index into the trail -- no more explicit propagation queue in MiniSat).
     int                 simpDB_assigns;   // Number of top-level assignments since last execution of 'simplify()'.

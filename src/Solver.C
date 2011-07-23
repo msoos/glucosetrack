@@ -283,7 +283,7 @@ void Solver::fullCancelUntil(int level, int sublevel)
     trail.shrink(trail.size() - sublevel);
     trail_lim.shrink(trail_lim.size() - level);
     #ifdef RESTORE
-    printf("sublevel: %d, level: %d, qhead:%d\n", trail.size(), decisionLevel(), qhead);
+    printf("Full cancel finished. Sublevel: %d, level: %d, qhead:%d\n", trail.size(), decisionLevel(), qhead);
     #endif
 }
 
@@ -828,7 +828,19 @@ struct gainedSorter {
     }
 };
 
+void Solver::printClauseUsefulnessStats()
+{
+    vec<Clause*> backupLearnts;
+    backupLearnts = learnts;
+    sort(backupLearnts, gainedSorter());
 
+    printf("Clause usefulness stats:\n");
+    for(int i = 0; i < backupLearnts.size(); i++) {
+        Clause* c = backupLearnts[i];
+        printf("Clause size %d glue %d numConflicted %d gainedProps %d gainedBogoProps %d gainedDecisions %d\n", c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
+    }
+    printf("End of this round of database cleaning\n");
+}
 
 
 void Solver::reduceDB()
@@ -837,14 +849,7 @@ void Solver::reduceDB()
 
 
     nbReduceDB++;
-    vec<Clause*> backupLearnts;
-    backupLearnts = learnts;
-    sort(backupLearnts, gainedSorter());
-    for(int i = 0; i < backupLearnts.size(); i++) {
-        Clause* c = backupLearnts[i];
-        printf("Clause size %d glue %d numConflicted %d gainedProps %d gainedBogoProps %d gainedDecisions %d\n", c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
-    }
-    printf("End of this round of database cleaning\n");
+    printClauseUsefulnessStats();
 
     sort(learnts, reduceDB_lt());
 
