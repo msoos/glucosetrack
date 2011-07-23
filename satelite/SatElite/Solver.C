@@ -11,7 +11,7 @@ A simple Chaff-like SAT-solver with support for incremental SAT.
 #include "Sort.h"
 #include <cmath>
 
-#include "Solver_clause.iC"    // (purely for efficiency reasons!)
+//#include "Solver_clause.C"    // (purely for efficiency reasons!)
 
 
 //=================================================================================================
@@ -142,20 +142,20 @@ Solver::~Solver(void)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  analyze : (confl : Clause) (out_learnt : vec<Lit>&) (out_btlevel : int&)  ->  [void]            
-|                                                                                                  
-|  Description:                                                                                    
-|    Analyze conflict and produce a reason clause.                                                 
-|                                                                                                  
-|    Pre-conditions:                                                                               
-|      * 'out_learnt' is assumed to be cleared.                                                    
-|      * Current decision level must be greater than root level.                                   
-|                                                                                                  
-|    Post-conditions:                                                                              
-|      * 'out_learnt[0]' is the asserting literal at level 'out_btlevel'.                          
-|                                                                                                  
-|  Effect:                                                                                         
+|
+|  analyze : (confl : Clause) (out_learnt : vec<Lit>&) (out_btlevel : int&)  ->  [void]
+|
+|  Description:
+|    Analyze conflict and produce a reason clause.
+|
+|    Pre-conditions:
+|      * 'out_learnt' is assumed to be cleared.
+|      * Current decision level must be greater than root level.
+|
+|    Post-conditions:
+|      * 'out_learnt[0]' is the asserting literal at level 'out_btlevel'.
+|
+|  Effect:
 |    Will undo part of the trail, upto but not beyond the assumption of the current decision level.
 |________________________________________________________________________________________________@*/
 void Solver::analyze(Clause confl, vec<Lit>& out_learnt, int& out_btlevel)
@@ -343,20 +343,20 @@ void Solver::analyze(Clause confl, vec<Lit>& out_learnt, int& out_btlevel)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  enqueue : (p : Lit) (from : Clause)  ->  [bool]                                                 
-|                                                                                                  
-|  Description:                                                                                    
+|
+|  enqueue : (p : Lit) (from : Clause)  ->  [bool]
+|
+|  Description:
 |    Puts a new fact on the propagation queue as well as immediately updating the variable's value.
-|    Should a conflict arise, FALSE is returned.                                                   
-|                                                                                                  
-|  Input:                                                                                          
-|    p    - The fact to enqueue                                                                    
-|    from - [Optional] Fact propagated from this (currently) unit clause. Stored in 'reason[]'.    
-|           Default value is NULL (no reason).                                                     
-|                                                                                                  
-|  Output:                                                                                         
-|    TRUE if fact was enqueued without conflict, FALSE otherwise.                                  
+|    Should a conflict arise, FALSE is returned.
+|
+|  Input:
+|    p    - The fact to enqueue
+|    from - [Optional] Fact propagated from this (currently) unit clause. Stored in 'reason[]'.
+|           Default value is NULL (no reason).
+|
+|  Output:
+|    TRUE if fact was enqueued without conflict, FALSE otherwise.
 |________________________________________________________________________________________________@*/
 bool Solver::enqueue(Lit p, Clause from)
 {
@@ -393,11 +393,11 @@ bool Solver::enqueue(Lit p, Clause from)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  propagateToplevel : [void]  ->  [void]                                                          
-|                                                                                                  
-|  Description:                                                                                    
-|    Destructively update clause database with enqueued top-level facts.                           
+|
+|  propagateToplevel : [void]  ->  [void]
+|
+|  Description:
+|    Destructively update clause database with enqueued top-level facts.
 |________________________________________________________________________________________________@*/
 void Solver::propagateToplevel(void)
 {
@@ -432,15 +432,15 @@ void Solver::propagateToplevel(void)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  propagate : [void]  ->  [Clause]                                                                
-|                                                                                                  
-|  Description:                                                                                    
-|    Propagates all enqueued facts. If a conflict arises, the conflicting clause is returned,      
-|    otherwise NULL.                                                                               
-|                                                                                                  
-|    Post-conditions:                                                                              
-|      * the propagation queue is empty, even if there was a conflict.                             
+|
+|  propagate : [void]  ->  [Clause]
+|
+|  Description:
+|    Propagates all enqueued facts. If a conflict arises, the conflicting clause is returned,
+|    otherwise NULL.
+|
+|    Post-conditions:
+|      * the propagation queue is empty, even if there was a conflict.
 |________________________________________________________________________________________________@*/
 #if 0
 // Standard
@@ -600,12 +600,12 @@ Clause Solver::propagate(void)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  reduceDB : ()  ->  [void]                                                                       
-|                                                                                                  
-|  Description:                                                                                    
-|    Remove half of the learnt clauses, minus the clauses locked by the current assignment. Locked 
-|    clauses are clauses that are reason to a some assignment.                                     
+|
+|  reduceDB : ()  ->  [void]
+|
+|  Description:
+|    Remove half of the learnt clauses, minus the clauses locked by the current assignment. Locked
+|    clauses are clauses that are reason to a some assignment.
 |________________________________________________________________________________________________@*/
 bool satisfied(Solver& S, Clause c)
 {
@@ -670,12 +670,12 @@ void Solver::compressDB(void)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  simplifyDB : [void]  ->  [bool]                                                                 
-|                                                                                                  
-|  Description:                                                                                    
-|    Simplify all constraints according to the current top-level assigment (redundant constraints  
-|    may be removed altogether).                                                                   
+|
+|  simplifyDB : [void]  ->  [bool]
+|
+|  Description:
+|    Simplify all constraints according to the current top-level assigment (redundant constraints
+|    may be removed altogether).
 |________________________________________________________________________________________________@*/
 void Solver::simplifyDB(bool subsume)
 {
@@ -715,18 +715,18 @@ void Solver::simplifyDB(bool subsume)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  search : (nof_conflicts : int) (nof_learnts : int) (params : const SearchParams&)  ->  [lbool]  
-|                                                                                                  
-|  Description:                                                                                    
-|    Search for a model the specified number of conflicts, keeping the number of learnt clauses    
-|    below the provided limit. NOTE! Use negative value for 'nof_conflicts' or 'nof_learnts' to    
-|    indicate infinity.                                                                            
-|                                                                                                  
-|  Output:                                                                                         
-|    'l_True' if a partial assigment that is consistent with respect to the clauseset is found. If 
+|
+|  search : (nof_conflicts : int) (nof_learnts : int) (params : const SearchParams&)  ->  [lbool]
+|
+|  Description:
+|    Search for a model the specified number of conflicts, keeping the number of learnt clauses
+|    below the provided limit. NOTE! Use negative value for 'nof_conflicts' or 'nof_learnts' to
+|    indicate infinity.
+|
+|  Output:
+|    'l_True' if a partial assigment that is consistent with respect to the clauseset is found. If
 |    all variables are decision variables, this means that the clause set is satisfiable. 'l_False'
-|    if the clause set is unsatisfiable. 'l_Undef' if the bound on number of conflicts is reached. 
+|    if the clause set is unsatisfiable. 'l_Undef' if the bound on number of conflicts is reached.
 |________________________________________________________________________________________________@*/
 lbool Solver::search(int nof_conflicts, int nof_learnts, const SearchParams& params)
 {
@@ -801,12 +801,12 @@ lbool Solver::search(int nof_conflicts, int nof_learnts, const SearchParams& par
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  extendModel : [void]  ->  [void]                                                                
-|                                                                                                  
-|  Description:                                                                                    
-|    Extend the partial model of the current SAT environment to a full model, reading back         
-|    eliminated clauses from the temporary file.                                                   
+|
+|  extendModel : [void]  ->  [void]
+|
+|  Description:
+|    Extend the partial model of the current SAT environment to a full model, reading back
+|    eliminated clauses from the temporary file.
 |________________________________________________________________________________________________@*/
 void Solver::extendModel(void)
 {
@@ -847,7 +847,7 @@ void Solver::extendModel(void)
     S.model.moveTo(model);
 
   #else
-    // READING FILE BACKWARDS  
+    // READING FILE BACKWARDS
     Solver  S(occ_Off);
     S.setupWatches();
     for (int i = 0; i < nVars(); i++){
@@ -938,13 +938,13 @@ void Solver::claRescaleActivity(void)
 
 
 /*_________________________________________________________________________________________________
-|                                                                                                  
-|  solve : (assumps : const vec<Lit>&)  ->  [bool]                                                 
-|                                                                                                  
-|  Description:                                                                                    
-|    Top-level solve. If using assumptions (non-empty 'assumps' vector), you must call             
-|    'simplifyDB()' first to see that no top-level conflict is present (which would put the solver 
-|    in an undefined state).                                                                       
+|
+|  solve : (assumps : const vec<Lit>&)  ->  [bool]
+|
+|  Description:
+|    Top-level solve. If using assumptions (non-empty 'assumps' vector), you must call
+|    'simplifyDB()' first to see that no top-level conflict is present (which would put the solver
+|    in an undefined state).
 |________________________________________________________________________________________________@*/
 bool Solver::solve(const vec<Lit>& assumps)
 {

@@ -2,31 +2,12 @@
 // NOTE! Must include "SolverTypes.h" before including this file.
 //
 
-#define BCNF_CHUNK_LIMIT 1048576
+#include <stdio.h>
+#include "BcnfWriter.h"
 
 
 //=================================================================================================
 // BCNF Writer:
-
-
-class BcnfWriter {
-    FILE*   out;
-    int     n_vars;
-    int     n_clauses;
-    int     chunk_sz;
-    int*    chunk;
-
-public:
-    int     stated_n_vars;      // }- The "p cnf" line.
-    int     stated_n_clauses;   // }
-
-    BcnfWriter(cchar* output_file);
-   ~BcnfWriter(void);
-
-    void addClause(vec<Lit>& c);
-    int  nVars   (void) { return n_vars; }
-    int  nClauses(void) { return n_clauses; }
-};
 
 
 BcnfWriter::BcnfWriter(cchar* output_file)

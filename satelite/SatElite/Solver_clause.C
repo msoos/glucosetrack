@@ -8,7 +8,7 @@ ADT for clauses, the only constraint supported by Satelite.
 
 #include "Solver.h"
 #include "Sort.h"
-
+#include "Main.h"
 
 //=================================================================================================
 // Allocation:
@@ -23,7 +23,7 @@ struct Size28 { char dummy[28]; };
 VecAlloc<Size24> mem24;
 VecAlloc<Size28> mem28;
 
-template <class T> macro void* ymalloc(int size);
+template <class T> inline void* ymalloc(int size);
 template <> void* ymalloc<char>(int size)
 {
     if      (size == 24) return (void*)mem24.alloc();
@@ -32,7 +32,7 @@ template <> void* ymalloc<char>(int size)
 }
 
 
-macro void yfree(void* ptr)
+inline void yfree(void* ptr)
 {
     Clause c((Clause_t*)ptr);
     assert(!c.dynamic());

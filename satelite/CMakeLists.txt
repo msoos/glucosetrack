@@ -1,3 +1,5 @@
+include_directories( ${PROJECT_SOURCE_DIR}/satelite/ForMani )
+
 add_executable(sateliteexec
     SatElite/BcnfWriter.C
     SatElite/Main.C

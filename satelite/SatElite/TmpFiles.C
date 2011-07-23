@@ -1,5 +1,7 @@
 #include "TmpFiles.h"
 
+#include <stdio.h>
+#include "SolverTypes.h"
 
 static vec<FILE*>  tmp_fps;
 static vec<cchar*> tmp_files;

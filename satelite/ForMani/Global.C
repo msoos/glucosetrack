@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <unistd.h>
+#include "Global.h"
 
 //#include <libiberty.h>
 
@@ -282,10 +283,3 @@ int64 memPhysical(void)
         }
     }
 }
-
-
-//=================================================================================================
-// Sub implementation files:
-
-
-#include "String.C"

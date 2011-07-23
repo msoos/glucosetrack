@@ -1,14 +1,15 @@
 #include "Solver.h"
 #include "Main.h"
 #include "Sort.h"
-#include "BcnfWriter.iC"
+//#include "BcnfWriter.iC"
+#include "BcnfWriter.h"
 
 #define Report(format, args...) ((verbosity >= 1) ? reportf(format , ## args) : 0)
 //#define Report(format, args...)
 #define Report2(format, args...) ((verbosity >= 2) ? reportf(format , ## args) : 0)
 
 
-macro bool has(Clause c, Lit p) {
+inline bool has(Clause c, Lit p) {
     for (int i = 0; i < c.size(); i++)
         if (c[i] == p) return true;
     return false; }
@@ -41,7 +42,7 @@ bool subset(Clause A, Clause B, vec<char>& seen)
 #endif
 
 
-macro bool subset(uint64 A, uint64 B) { return (A & ~B) == 0; }
+inline bool subset(uint64 A, uint64 B) { return (A & ~B) == 0; }
 
 
 // Assumes 'seen' is cleared (will leave it cleared)
@@ -65,7 +66,7 @@ bool selfSubset(Clause A, Clause B, vec<char>& seen)
 }
 
 
-macro bool selfSubset(uint64 A, uint64 B)
+inline bool selfSubset(uint64 A, uint64 B)
 {
     uint64 B_tmp = B | ((B & 0xAAAAAAAAAAAAAAAALL) >> 1) | ((B & 0x5555555555555555LL) << 1);
     if ((A & ~B_tmp) == 0){

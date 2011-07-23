@@ -1,5 +1,7 @@
 #include "File.h"
+#include "Global.h"
 
+#include <string.h>
 
 void File::open(int file_descr, FileMode m, bool own)
 {
@@ -56,7 +58,7 @@ void File::close(void)
     fd = -1;
 }
 
-void File::seek(int64 file_pos, int whence)
+void File::seek(int64_t file_pos, int whence)
 {
     if (mode == WRITE){
         flush();
@@ -70,7 +72,7 @@ void File::seek(int64 file_pos, int whence)
     }
 }
 
-int64 File::tell(void)
+int64_t File::tell(void)
 {
     if (mode == WRITE)
         return lseek64(fd, 0, SEEK_CUR);
@@ -83,7 +85,7 @@ int64 File::tell(void)
 // Marshaling:
 
 
-void putUInt(File& out, uint64 val)
+void putUInt(File& out, uint64_t val)
 {
     if (val < 0x20000000){
         uint    v = (uint)val;
@@ -116,7 +118,7 @@ void putUInt(File& out, uint64 val)
 }
 
 
-uint64 getUInt(File& in)    // Returns 0 at end-of-file.
+uint64_t getUInt(File& in)    // Returns 0 at end-of-file.
 {
     uint byte0, byte1, byte2, byte3, byte4, byte5, byte6, byte7;
     byte0 = in.getChar();
@@ -146,8 +148,8 @@ uint64 getUInt(File& in)    // Returns 0 at end-of-file.
             byte5 = in.getChar();
             byte6 = in.getChar();
             byte7 = in.getChar();
-            return ((uint64)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3) << 32)
-                 |  (uint64)((byte4 << 24) | (byte5 << 16) | (byte6 << 8) | byte7);
+            return ((uint64_t)((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3) << 32)
+                 |  (uint64_t)((byte4 << 24) | (byte5 << 16) | (byte6 << 8) | byte7);
         }
         assert(false);
     }

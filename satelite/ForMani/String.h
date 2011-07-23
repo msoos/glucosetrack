@@ -66,16 +66,15 @@ String String_node(String left, String right) {
     tmp->node.right    = right.ptr;
     return tmp; }
 
-static void String_delete(String s) ___unused;
-static
-void String_delete(String s) {
+//static void String_delete(String s) ___unused;
+static void String_delete(String s) {
     if (s.ptr != &String_empty)
         delete s.ptr; }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 inline String scopy(const char* text) {
-    return String_leaf(xstrdup(text), true); }
+    return String_leaf(Xstrdup(text), true); }
 
 inline String sref(const char* text) {
     return String_leaf(const_cast<char*>(text), false); }

@@ -18,6 +18,7 @@ Read a DIMACS or BCNF file and apply the SAT-solver to it.
 #include <unistd.h>
 #include <signal.h>
 #include "File.h"
+#include "Profile.h"
 
 
 //=================================================================================================
@@ -349,7 +350,7 @@ static void parse_DIMACS_main(B& in, Solver& S) {
 	      printf("c num clauses = %d\n",clauses);
 	      printf("c too many clauses .. no preprocessing\n");
 	      exit(11);
-	    } 
+	    }
 	  }else{
 	    reportf("PARSE ERROR! Unexpected char: %c\n", *in), exit(3);
 	  }
@@ -554,7 +555,7 @@ int main(int argc, char** argv)
 #ifndef SAT_LIVE
         if (out != NULL) fflush(out);
       #endif
-	
+
 #ifdef VERIFY_MODEL
         if (input_file != NULL)
 	  reportf("Verifying model...\n"),
@@ -562,7 +563,7 @@ int main(int argc, char** argv)
             reportf("OK!\n");
 #endif
     }
-    
+
     exit(st ? 10 : 20);     // (faster than "return", which will invoke the destructor for 'Solver')
-    
+
 }

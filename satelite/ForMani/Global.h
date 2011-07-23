@@ -10,6 +10,7 @@
 #include <new>
 #include <memory>
 using namespace std;
+
 // NOTE: Machine dependent lines have been tagged "<=MD"
 
 
@@ -20,8 +21,6 @@ using namespace std;
 // Misc:
 
 #define elemsof(x) (sizeof(x) / sizeof(*(x)))
-
-#define macro static inline
 
 #ifndef PANIC   // (makefile may define PANIC to eg. 'throw message')
 #define PANIC(message) ( fflush(stdout), \
@@ -143,38 +142,38 @@ typedef UINT_PTR           uintp;
   #define memAssert(cond) if (!(cond)) throw Exception_MemOut()
 #endif
 
-template<class T> macro T* xmalloc(size_t size) ___malloc;
-template<class T> macro T* xmalloc(size_t size) {
+template<class T> inline T* xmalloc(size_t size) ___malloc;
+template<class T> inline T* xmalloc(size_t size) {
     T*   tmp = (T*)malloc(size * sizeof(T));
     memAssert(size == 0 || tmp != NULL);
     return tmp; }
 
-template<class T> macro T* xrealloc(T* ptr, size_t size) ___malloc;
-template<class T> macro T* xrealloc(T* ptr, size_t size) {
+template<class T> inline T* xrealloc(T* ptr, size_t size) ___malloc;
+template<class T> inline T* xrealloc(T* ptr, size_t size) {
     T*   tmp = (T*)realloc((void*)ptr, size * sizeof(T));
     memAssert(size == 0 || tmp != NULL);
     return tmp; }
 
-template<class T> macro void xfree(T* ptr) {
+template<class T> inline void xfree(T* ptr) {
     if (ptr != NULL) free((void*)ptr); }
 
 
 //=================================================================================================
-// Bit macros:
+// Bit inlines:
 
 
 // Signed min/max -- These are only 31 bit safe (or 63 bits; one less than the word size).
 // To get the 32nd bit (64th) right you need "subtract with borrow", which C does not support.
 //
-macro int imin(int x, int y) {
+inline int imin(int x, int y) {
     int mask = (x-y) >> (sizeof(int)*8-1);
     return (x&mask) + (y&(~mask)); }
 
-macro int imax(int x, int y) {
+inline int imax(int x, int y) {
     int mask = (y-x) >> (sizeof(int)*8-1);
     return (x&mask) + (y&(~mask)); }
 
-macro int isign(int x) {
+inline int isign(int x) {
     return (x >> (sizeof(int)*8-1)) & 1; }
 
 
@@ -197,24 +196,6 @@ public:
 //=================================================================================================
 // Strings and Show:
 
-
-macro char* Xstrdup(cchar* src) ___malloc;
-macro char* Xstrdup(cchar* src) {
-    int     size = strlen(src)+1;
-    char*   tmp = xmalloc<char>(size);
-    memcpy(tmp, src, size);
-    return tmp; }
-#define xstrdup(s) Xstrdup(s)
-
-macro char* xstrndup(cchar* src, int len) ___malloc;
-macro char* xstrndup(cchar* src, int len) {
-    int     size; for (size = 0; size < len && src[size] != '\0'; size++);
-    char*   tmp = xmalloc<char>(size+1);
-    memcpy(tmp, src, size); tmp[size] = '\0';
-    return tmp; }
-
-#include "String.h"
-
 char* nsprintf (cchar* format, ...) ___format(printf, 1, 2) ___malloc;
 char* strnum   (int num) ___malloc;
 char* strtokr  (char** src, cchar* seps);
@@ -226,14 +207,6 @@ void  writeFile(cchar* filename, cchar* data, int size);
 
 #define tempf(format, args...) sFree(nsprintf(format , ## args))
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-template <class T> macro String show(const T& t) { return t.show(); }
-
-macro String show(int x)    { return sown(strnum(x)); }
-macro String show(cchar* x) { return scopy(x); }
-macro String show(char* x)  { return scopy(x); }
-
 #define showf(format, args...) sown(nsprintf(format , ## args))
 
 
@@ -242,14 +215,14 @@ macro String show(char* x)  { return scopy(x); }
 
 
 // Returns a random float 0 <= x < 1. Seed must never be 0.
-macro double drand(double& seed) {
+inline double drand(double& seed) {
     seed *= 1389796;
     int q = (int)(seed / 2147483647);
     seed -= (double)q * 2147483647;
     return seed / 2147483647; }
 
 // Returns a random integer 0 <= x < size. Seed must never be 0.
-macro int irand(double& seed, int size) {
+inline int irand(double& seed, int size) {
     return (int)(drand(seed) * size); }
 
 
@@ -294,6 +267,32 @@ inline Pair<Fst, Snd> Pair_new(const Fst& x, const Snd& y) {
 
 
 // NOTE! Don't use this vector on datatypes that cannot be moved with 'memcpy'.
+
+
+//inline char* Xstrdup(cchar* src) ___malloc;
+inline char* Xstrdup(const char* src) {
+    int     size = strlen(src)+1;
+    char*   tmp = xmalloc<char>(size);
+    memcpy(tmp, src, size);
+    return tmp;
+}
+#define xstrdup(s) Xstrdup(s)
+
+inline char* xstrndup(cchar* src, int len) ___malloc;
+inline char* xstrndup(cchar* src, int len) {
+    int     size; for (size = 0; size < len && src[size] != '\0'; size++);
+    char*   tmp = xmalloc<char>(size+1);
+    memcpy(tmp, src, size); tmp[size] = '\0';
+        return tmp;
+}
+
+#include "String.h"
+
+template <class T> inline String show(const T& t) { return t.show(); }
+
+inline String show(int x)    { return sown(strnum(x)); }
+inline String show(cchar* x) { return scopy(x); }
+inline String show(char* x)  { return scopy(x); }
 
 template<class T>
 class vec {
@@ -394,10 +393,10 @@ void vec<T>::clear(bool dealloc) {
 
 #ifndef __SGI_STL_INTERNAL_RELOPS   // (be aware of SGI's STL implementation...)
 #define __SGI_STL_INTERNAL_RELOPS
-template <class T> macro bool operator != (const T& x, const T& y) { return !(x == y); }
-template <class T> macro bool operator >  (const T& x, const T& y) { return y < x;     }
-template <class T> macro bool operator <= (const T& x, const T& y) { return !(y < x);  }
-template <class T> macro bool operator >= (const T& x, const T& y) { return !(x < y);  }
+template <class T> inline bool operator != (const T& x, const T& y) { return !(x == y); }
+template <class T> inline bool operator >  (const T& x, const T& y) { return y < x;     }
+template <class T> inline bool operator <= (const T& x, const T& y) { return !(y < x);  }
+template <class T> inline bool operator >= (const T& x, const T& y) { return !(x < y);  }
 #endif
 
 
@@ -410,7 +409,7 @@ class lbool {
 
 
 public:
-    explicit lbool(int v) : value(v) { } 
+    explicit lbool(int v) : value(v) { }
     lbool()       : value(0) { }
     lbool(bool x) : value((int)x*2-1) { }
     int toInt(void) const { return value; }
@@ -442,12 +441,12 @@ const lbool l_Error = lbool(1 << (sizeof(int)*8-1));//toLbool(1 << (sizeof(int)*
 #include <sys/time.h>
 #include <sys/timex.h>
 
-macro double cpuTime(void) {
+inline double cpuTime(void) {
     struct rusage ru;
     getrusage(RUSAGE_SELF, &ru);
     return (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec / 1000000; }
 
-macro double realTime(void) {
+inline double realTime(void) {
     struct ntptimeval t;
     ntp_gettime(&t);
     return (double)t.time.tv_sec + (double)t.time.tv_usec / 1000000; }
@@ -462,7 +461,7 @@ int64 memPhysical(void);
 
 
 template <class T>
-macro void swp(T& x, T& y) {        // 'swap' is used by STL
+inline void swp(T& x, T& y) {        // 'swap' is used by STL
     T tmp = x; x = y; y = tmp; }
 
 
@@ -474,7 +473,6 @@ public:
     Restore(T& x) : variable_ptr(&x), old_value(x) {}
    ~Restore(void) { *variable_ptr = old_value; }
 };
-
 
 //=================================================================================================
 

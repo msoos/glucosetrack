@@ -10,6 +10,13 @@
 #define open64  ::open
 #endif
 
+#include <stdint.h>
+#include <assert.h>
+#include <stdio.h>
+
+
+typedef unsigned char uchar;
+typedef const char cchar;
 
 //=================================================================================================
 // A buffered file abstraction with only 'putChar()' and 'getChar()'.
@@ -113,8 +120,8 @@ public:
         write(fd, buf, pos);
         pos = 0; }
 
-    void  seek(int64 pos, int whence = SEEK_SET);
-    int64 tell(void);
+    void  seek(int64_t pos, int whence = SEEK_SET);
+    int64_t tell(void);
 };
 
 
@@ -122,12 +129,12 @@ public:
 // Some nice helper functions:
 
 
-void         putUInt (File& out, uint64 val);
-uint64       getUInt (File& in);
-macro uint64 encode64(int64  val)           { return (val >= 0) ? (uint64)val << 1 : (((uint64)(~val) << 1) | 1); }
-macro int64  decode64(uint64 val)           { return ((val & 1) == 0) ? (int64)(val >> 1) : ~(int64)(val >> 1); }
-macro void   putInt  (File& out, int64 val) { putUInt(out, encode64(val)); }
-macro uint64 getInt  (File& in)             { return decode64(getUInt(in)); }
+void         putUInt (File& out, uint64_t val);
+inline uint64_t       getUInt (File& in);
+inline uint64_t encode64(int64_t  val)           { return (val >= 0) ? (uint64_t)val << 1 : (((uint64_t)(~val) << 1) | 1); }
+inline int64_t  decode64(uint64_t val)           { return ((val & 1) == 0) ? (int64_t)(val >> 1) : ~(int64_t)(val >> 1); }
+inline void   putInt  (File& out, int64_t val) { putUInt(out, encode64(val)); }
+inline uint64_t getInt  (File& in)             { return decode64(getUInt(in)); }
 
 
 //=================================================================================================

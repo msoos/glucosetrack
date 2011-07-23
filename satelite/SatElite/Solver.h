@@ -9,7 +9,7 @@ A simple Chaff-like SAT-solver with support for incremental SAT.
 #ifndef Solver_h
 #define Solver_h
 
-#include "SolverTypes.h"
+#include "Global.h"
 #include "Queue.h"
 #include "VarOrder.h"
 #include "TmpFiles.h"
@@ -105,8 +105,8 @@ public:
 
 const Clause Clause_NULL = Clause();
 
-macro bool operator < (Clause c1, Clause c2) { return (intp)c1.ptr() < (intp)c2.ptr(); }
-macro uint hash(Clause c) { return (int)c.id(); }
+inline bool operator < (Clause c1, Clause c2) { return (intp)c1.ptr() < (intp)c2.ptr(); }
+inline uint hash(Clause c) { return (int)c.id(); }
 
 
 
@@ -166,7 +166,7 @@ public:
 
 
 template <class T>
-macro void remove(vec<T>& ws, const T& elem)
+inline void remove(vec<T>& ws, const T& elem)
 {
     int j = 0;
     for (; ws[j] != elem  ; j++) assert(j < ws.size());
@@ -174,16 +174,16 @@ macro void remove(vec<T>& ws, const T& elem)
     ws.pop();
 }
 
-template <class T> macro void maybeRemove(vec<T>& ws, const T& elem) { if (ws.size() > 0) remove(ws, elem); }
+template <class T> inline void maybeRemove(vec<T>& ws, const T& elem) { if (ws.size() > 0) remove(ws, elem); }
 
 
-macro int find(Clause c, Lit p) {
+inline int find(Clause c, Lit p) {
     for (int i = 0;; i++){
         assert(i < c.size());
         if (c[i] == p) return i; } }
 
 template <class T>
-macro int find(const vec<T>& ws, const T& elem) {   // 'find' has pre-condition that the element exists in the vector.
+inline int find(const vec<T>& ws, const T& elem) {   // 'find' has pre-condition that the element exists in the vector.
     for (int i = 0;; i++){
         assert(i < ws.size());
         if (ws[i] == elem) return i; } }
@@ -455,26 +455,26 @@ struct Solver {
 #endif
 
 
-macro void dump(Clause c, bool newline = true, FILE* out = stdout) {
+inline void dump(Clause c, bool newline = true, FILE* out = stdout) {
     fprintf(out, "{");
     for (int i = 0; i < c.size(); i++) fprintf(out, " "L_LIT, L_lit(c[i]));
     fprintf(out, " }%s", newline ? "\n" : "");
     fflush(out);
 }
-macro void dump(Solver& S, Clause c, bool newline = true, FILE* out = stdout) {
+inline void dump(Solver& S, Clause c, bool newline = true, FILE* out = stdout) {
     fprintf(out, "{");
     for (int i = 0; i < c.size(); i++) fprintf(out, " "L_LIT":%c", L_lit(c[i]), name(S.value(c[i])));
     fprintf(out, " }%s", newline ? "\n" : "");
     fflush(out);
 }
 
-macro void dump(const vec<Lit>& c, bool newline = true, FILE* out = stdout) {
+inline void dump(const vec<Lit>& c, bool newline = true, FILE* out = stdout) {
     fprintf(out, "{");
     for (int i = 0; i < c.size(); i++) fprintf(out, " "L_LIT, L_lit(c[i]));
     fprintf(out, " }%s", newline ? "\n" : "");
     fflush(out);
 }
-macro void dump(Solver& S, vec<Lit>& c, bool newline = true, FILE* out = stdout) {
+inline void dump(Solver& S, vec<Lit>& c, bool newline = true, FILE* out = stdout) {
     fprintf(out, "{");
     for (int i = 0; i < c.size(); i++) fprintf(out, " "L_LIT":%c", L_lit(c[i]), name(S.value(c[i])));
     fprintf(out, " }%s", newline ? "\n" : "");

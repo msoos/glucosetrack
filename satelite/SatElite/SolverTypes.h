@@ -10,9 +10,8 @@ Contains the solver specific types: Var, Lit.
 #ifndef SolverTypes_h
 #define SolverTypes_h
 
-#ifndef Global_h
 #include "Global.h"
-#endif
+
 
 
 //=================================================================================================
@@ -46,7 +45,7 @@ inline  Lit toLit(int i) { Lit p; p.x = i; return p; }
 const Lit lit_Undef(var_Undef, false);  // }- Useful special constants.
 const Lit lit_Error(var_Undef, true );  // }
 
-macro uint64 abstLit(Lit p) { return ((uint64)1) << (index(p) & 63); }
+inline uint64 abstLit(Lit p) { return ((uint64)1) << (index(p) & 63); }
 
 //=================================================================================================
 #endif

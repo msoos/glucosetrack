@@ -13,9 +13,9 @@ extern uint64  t_total__;
 extern uint64  t_mark__;
 extern int     t_reclev__;
 
-macro void   tset(void) { if (t_reclev__ == 0) t_mark__ = rdtsc(); t_reclev__++; }
-macro void   tclr(void) { t_reclev__--; if (t_reclev__ == 0) t_total__ += rdtsc() - t_mark__; }
-macro double tsum(void) { return (double)t_total__ / 2050000000.0; }       // (approximation of the CPU frequency goes here...)
+inline void   tset(void) { if (t_reclev__ == 0) t_mark__ = rdtsc(); t_reclev__++; }
+inline void   tclr(void) { t_reclev__--; if (t_reclev__ == 0) t_total__ += rdtsc() - t_mark__; }
+inline double tsum(void) { return (double)t_total__ / 2050000000.0; }       // (approximation of the CPU frequency goes here...)
 
 struct TimeIt_t {
     TimeIt_t(void) { tset(); }
