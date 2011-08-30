@@ -32,7 +32,7 @@ add_custom_command(
 )
 
 add_dependencies(copy
-    glucose
+    glucose_track
     satelite
 )
 
