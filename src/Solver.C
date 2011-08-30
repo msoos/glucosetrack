@@ -1098,16 +1098,16 @@ bool Solver::solve(const vec<Lit>& assumps)
     lbool   status        = l_Undef;
 
     if (verbosity >= 1){
-        reportf("c ============================[ Search Statistics ]==============================\n");
-        reportf("c | Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
-        reportf("c |           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
-        reportf("c ===============================================================================\n");
+        reportf("============================[ Search Statistics ]==============================\n");
+        reportf("| Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
+        reportf("|           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
+        reportf("===============================================================================\n");
     }
 
     // Search:
     while (status == l_Undef){
         if (verbosity >= 1)
-            reportf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", (int)conflicts, order_heap.size(), nClauses(), (int)clauses_literals, (int)nof_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progress_estimate*100), fflush(stdout);
+            reportf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", (int)conflicts, order_heap.size(), nClauses(), (int)clauses_literals, (int)nof_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progress_estimate*100), fflush(stdout);
         status = search((int)nof_conflicts, (int)nof_learnts);
         nof_conflicts *= restart_inc;
  //LS mis dans reduceDB lui meme       nof_learnts   *= learntsize_inc;
