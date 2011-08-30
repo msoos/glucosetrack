@@ -143,6 +143,7 @@ protected:
         double random_seed;
         int64_t simpDB_props;
         vec<char> polarity;
+        int num_props;
     };
     BackupData backup;
 

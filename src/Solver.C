@@ -602,8 +602,7 @@ Clause* Solver::propagate() {
     const Lit      p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
     vec<Watched>&  ws  = watches[toInt(p)];
     Watched         *i, *j, *end;
-    propagations++;
-    simpDB_props--;
+    num_props++;
 
     #ifdef RESTORE
     printf("Propagating lit "); printLit(p); printf(" number: %d\n", toInt(p));
@@ -708,6 +707,7 @@ Clause* Solver::propagate() {
                 backup.bogoProps = bogoProps;
                 backup.decisions = decisions;
                 backup.simpDB_props = simpDB_props;
+                backup.num_props = num_props;
                 backup.random_seed = random_seed;
                 backup.polarity = polarity;
             }
@@ -738,7 +738,7 @@ Clause* Solver::propagate() {
                 assert(backup.decisions <= decisions);
                 assert(backup.propagations <= propagations);
 
-                c.getGainedProps() += (propagations - backup.propagations);
+                c.getGainedProps() += (propagations + num_props - backup.propagations - backup.num_props);
                 c.getGainedBogoProps() += (bogoProps - backup.bogoProps);
                 c.getGainedDecisions() += (decisions - backup.decisions);
                 c.getNumConflicted()++;
@@ -750,6 +750,7 @@ Clause* Solver::propagate() {
                 simpDB_props = backup.simpDB_props;
                 random_seed = backup.random_seed;
                 polarity = backup.polarity;
+                num_props = backup.num_props;
 
                 order_heap = backup.order_heap;
                 backup.detachedClause = NULL;
@@ -788,6 +789,8 @@ Clause* Solver::propagate() {
     }
     ws.shrink(i - j);
   }
+  propagations+=num_props;
+  simpDB_props-=num_props;
 
   return confl;
 }
