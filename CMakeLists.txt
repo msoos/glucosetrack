@@ -6,7 +6,7 @@ ELSE()
   SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel.")
 ENDIF()
 
-PROJECT(gluecosemeasure)
+PROJECT(glucosetrack)
 #SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/m4-extra) #m4-extra contains some library search cmake stuff
 
 SET(CMAKE_C_FLAGS_RELWITHDEBINFO "-O3 -g -fno-omit-frame-pointer -mtune=native")
@@ -27,7 +27,7 @@ add_custom_target(copy ALL
 
 add_custom_command(
     TARGET copy
-    COMMAND ${CMAKE_COMMAND} -E copy src/glucose .
+    COMMAND ${CMAKE_COMMAND} -E copy src/glucose_track .
     COMMAND ${CMAKE_COMMAND} -E copy SatELite/satelite .
 )
 
@@ -42,7 +42,7 @@ SET(CPACK_PACKAGE_MAINTAINER "Mate Soos (mate@srlabs.de)")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 SET(CPACK_PACKAGE_VERSION_MAJOR "1")
-SET(CPACK_PACKAGE_VERSION_MINOR "1")
+SET(CPACK_PACKAGE_VERSION_MINOR "0")
 SET(CPACK_PACKAGE_VERSION_PATCH "0")
 
 
@@ -55,6 +55,9 @@ set(CPACK_SOURCE_IGNORE_FILES
 "${PROJECT_SOURCE_DIR}/.git/"
 "${PROJECT_SOURCE_DIR}/.kdev4/"
 )
+
+SET(CPACK_SOURCE_PACKAGE_FILE_NAME
+    "glucosetrack-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
 SET(CPACK_PACKAGE_EXECUTABLES "satelite" "glucose")
 set(CPACK_SOURCE_STRIP_FILES 1)
