@@ -27,6 +27,8 @@ double  nof_learnts;
 // Constructor/Destructor:
 int nbclausesbeforereduce = NBCLAUSESBEFOREREDUCE;
 
+//#define DEBUG_CONFLICTS
+//#define DEBUG_DECLEVELGAIN
 
 
 static inline void removeW(vec<Watched> &ws,Clause *c) {
@@ -614,6 +616,12 @@ Clause* Solver::propagate() {
     for(int k = 0;k<wbin.size();k++) {
       Lit imp = wbin[k].implied;
       if(value(imp) == l_False) {
+        #ifdef DEBUG_CONFLICTS
+        if (backup.stage == 1) {
+          printf("clause middle:");
+          printLit(~p);printf(" ");printLit(imp);printf("\n");
+        }
+        #endif //DEBUG_CONFLICTS
         return wbin[k].clause;
       }
 
@@ -694,6 +702,11 @@ Clause* Solver::propagate() {
                 && backup.stage == 0
                 && decisionLevel() > 0
             ) {
+                #ifdef DEBUG_CONFLICTS
+                printf("clause orig:");printClause(c);
+                //printf("orig pointer: %p\n", &c);
+                #endif //#ifdef DEBUG_CONFLICTS
+
                 #ifdef RESTORE_FULL
                 printf("Learnt clause %p wanted to make a conflict! declevel: %d trail: %d\n", &c, decisionLevel(), trail.size());
                 //printClause(c);
@@ -710,6 +723,7 @@ Clause* Solver::propagate() {
                 backup.num_props = num_props;
                 backup.random_seed = random_seed;
                 backup.polarity = polarity;
+                goto here;
             }
 
             if (backup.running
@@ -729,6 +743,12 @@ Clause* Solver::propagate() {
                 && backup.stage == 2
                 && decisionLevel() > 0
             ) {
+                #ifdef DEBUG_CONFLICTS
+                printf("clause final:");
+                printClause(c);
+                #endif //#ifdef DEBUG_CONFLICTS
+
+                //printf("final pointer: %p\n", &c);
                 assert(&c == backup.detachedClause);
                 backup.stage = 0;
                 #ifdef RESTORE_FULL
@@ -741,6 +761,11 @@ Clause* Solver::propagate() {
                 c.getGainedProps() += (propagations + num_props - backup.propagations - backup.num_props);
                 c.getGainedBogoProps() += (bogoProps - backup.bogoProps);
                 c.getGainedDecisions() += (decisions - backup.decisions);
+                #ifdef DEBUG_DECLEVELGAIN
+                if (backup.decisions < decisions) {
+                    fprintf(stderr, "gained declevel: %d\n", (int)(decisions - backup.decisions));
+                }
+                #endif //DEBUG_DECLEVELGAIN
                 c.getNumConflicted()++;
 
                 //Restore misc state
@@ -754,6 +779,14 @@ Clause* Solver::propagate() {
 
                 order_heap = backup.order_heap;
                 backup.detachedClause = NULL;
+            }
+
+            if (backup.stage == 1) {
+                #ifdef DEBUG_CONFLICTS
+                printf("clause middle:");
+                printClause(c);
+                //printf("middle pointer: %p\n", &c);
+                #endif //#ifdef DEBUG_CONFLICTS
             }
 
             confl = &c;
@@ -1031,7 +1064,6 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
                 reduceDB();
                 nbclausesbeforereduce += 500;
             }
-
 
             if (next == lit_Undef){
                 // New variable decision:
