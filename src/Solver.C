@@ -303,8 +303,7 @@ Lit Solver::pickBranchLit(int polarity_mode, double random_var_freq)
     }*/
 
     // Random decision:
-    if (false
-        && drand(random_seed) < random_var_freq
+    if (drand(random_seed) < random_var_freq
         && !order_heap.empty()
     ){
         next = order_heap[irand(random_seed,order_heap.size())];
