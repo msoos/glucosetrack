@@ -37,8 +37,8 @@ add_dependencies(copy
 )
 
 #general setup
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Glucose with usefulness measure")
-SET(CPACK_PACKAGE_MAINTAINER "Mate Soos (mate@srlabs.de)")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Glucose with usefulness measuring")
+SET(CPACK_PACKAGE_MAINTAINER "Vegard Nossum (vegard.nossum@gmail.com), Mate Soos (mate@srlabs.de)")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 SET(CPACK_PACKAGE_VERSION_MAJOR "1")

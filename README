@@ -9,3 +9,7 @@ You can use this program like glucose:
 
 The output, however, will regularly contain learnt clause sets with
 their usefulness measures
+
+NOTE: if you want to use the 'glucose_track' in standalone mode, please
+don't forget to add the '-track' option. Without it, the program will
+not measure usefulness
