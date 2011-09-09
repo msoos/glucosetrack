@@ -875,7 +875,7 @@ void Solver::printClauseUsefulnessStats()
     printf("c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
     for(int i = 0; i < backupLearnts.size(); i++) {
         Clause* c = backupLearnts[i];
-        printf("INSERT INTO data(cleanno, size, glue, conflicts, props, bogoprops, decisions) VALUES(%d, %d, %d, %d, %d, %d. %d);\n", cleanNo, c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
+        printf("INSERT INTO data(cleanno, size, glue, conflicts, props, bogoprops, decisions) VALUES(%d, %d, %d, %d, %d, %d, %d);\n", cleanNo, c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
     }
     printf("c End of this round of database cleaning\n");
     cleanNo++;
