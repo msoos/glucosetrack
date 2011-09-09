@@ -584,6 +584,103 @@ void Solver::uncheckedEnqueue(Lit p, Clause* from)
     trail.push(p);
 }
 
+bool Solver::handleConflict(Clause& c, int& num_props)
+{
+    if (backup.running
+        && c.learnt()
+        && backup.stage == 0
+        && decisionLevel() > 0
+    ) {
+        #ifdef DEBUG_CONFLICTS
+        printf("clause orig:");printClause(c);
+        //printf("orig pointer: %p\n", &c);
+        #endif //#ifdef DEBUG_CONFLICTS
+
+        #ifdef RESTORE_FULL
+        printf("Learnt clause %p wanted to make a conflict! declevel: %d trail: %d\n", &c, decisionLevel(), trail.size());
+        //printClause(c);
+        #endif
+        backup.order_heap = order_heap;
+        backup.detachedClause = &c;
+        backup.stage = 1;
+
+        //Save misc state
+        backup.propagations = propagations;
+        backup.bogoProps = bogoProps;
+        backup.decisions = decisions;
+        backup.simpDB_props = simpDB_props;
+        backup.num_props = num_props;
+        backup.random_seed = random_seed;
+        backup.polarity = polarity;
+        return false;
+    }
+
+    if (backup.running
+        && c.learnt()
+        && backup.stage == 1
+        && decisionLevel() > 0
+        && &c == backup.detachedClause
+    ) {
+        #ifdef RESTORE_FULL
+        printf("Skipping over conflicting with clause %p\n", backup.detachedClause);
+        #endif
+        return false;
+    }
+
+    if (backup.running
+        && c.learnt()
+        && backup.stage == 2
+        && decisionLevel() > 0
+    ) {
+        #ifdef DEBUG_CONFLICTS
+        printf("clause final:");
+        printClause(c);
+        #endif //#ifdef DEBUG_CONFLICTS
+
+        //printf("final pointer: %p\n", &c);
+        assert(&c == backup.detachedClause);
+        backup.stage = 0;
+        #ifdef RESTORE_FULL
+        printf("Now clause %p is making the conflict it wanted to make earlier. declevel: %d trail: %d \n", backup.detachedClause, decisionLevel(), trail.size());
+        //printClause(*backup.detachedClause);
+        #endif
+        assert(backup.decisions <= decisions);
+        assert(backup.propagations <= propagations);
+
+        c.getGainedProps() += (propagations + num_props - backup.propagations - backup.num_props);
+        c.getGainedBogoProps() += (bogoProps - backup.bogoProps);
+        c.getGainedDecisions() += (decisions - backup.decisions);
+        #ifdef DEBUG_DECLEVELGAIN
+        if (backup.decisions < decisions) {
+            fprintf(stderr, "gained declevel: %d\n", (int)(decisions - backup.decisions));
+        }
+        #endif //DEBUG_DECLEVELGAIN
+        c.getNumConflicted()++;
+
+        //Restore misc state
+        propagations = backup.propagations;
+        bogoProps = backup.bogoProps;
+        decisions = backup.decisions;
+        simpDB_props = backup.simpDB_props;
+        random_seed = backup.random_seed;
+        polarity = backup.polarity;
+        num_props = backup.num_props;
+
+        order_heap = backup.order_heap;
+        backup.detachedClause = NULL;
+    }
+
+    if (backup.stage == 1) {
+        #ifdef DEBUG_CONFLICTS
+        printf("clause middle:");
+        printClause(c);
+        //printf("middle pointer: %p\n", &c);
+        #endif //#ifdef DEBUG_CONFLICTS
+    }
+
+    return true;
+}
+
 
 /*_________________________________________________________________________________________________
 |
@@ -616,13 +713,8 @@ Clause* Solver::propagate() {
     for(int k = 0;k<wbin.size();k++) {
       Lit imp = wbin[k].implied;
       if(value(imp) == l_False) {
-        #ifdef DEBUG_CONFLICTS
-        if (backup.stage == 1) {
-          printf("clause middle:");
-          printLit(~p);printf(" ");printLit(imp);printf("\n");
-        }
-        #endif //DEBUG_CONFLICTS
-        return wbin[k].clause;
+        if (handleConflict(*wbin[k].clause, num_props))
+            return wbin[k].clause;
       }
 
       if(value(imp) == l_Undef) {
@@ -696,104 +788,15 @@ Clause* Solver::propagate() {
         j++;
 
         if (value(first) == l_False){
-            //Conflict detected, but not acted upon.
-            if (backup.running
-                && c.learnt()
-                && backup.stage == 0
-                && decisionLevel() > 0
-            ) {
-                #ifdef DEBUG_CONFLICTS
-                printf("clause orig:");printClause(c);
-                //printf("orig pointer: %p\n", &c);
-                #endif //#ifdef DEBUG_CONFLICTS
-
-                #ifdef RESTORE_FULL
-                printf("Learnt clause %p wanted to make a conflict! declevel: %d trail: %d\n", &c, decisionLevel(), trail.size());
-                //printClause(c);
-                #endif
-                backup.order_heap = order_heap;
-                backup.detachedClause = &c;
-                backup.stage = 1;
-
-                //Save misc state
-                backup.propagations = propagations;
-                backup.bogoProps = bogoProps;
-                backup.decisions = decisions;
-                backup.simpDB_props = simpDB_props;
-                backup.num_props = num_props;
-                backup.random_seed = random_seed;
-                backup.polarity = polarity;
-                goto here;
+            if (handleConflict(c, num_props)) {
+                confl = &c;
+                qhead = trail.size();
+                // Copy the remaining watches:
+                while (i < end)
+                    *j++ = *i++;
+            } else {
+                goto FoundWatch;
             }
-
-            if (backup.running
-                && c.learnt()
-                && backup.stage == 1
-                && decisionLevel() > 0
-                && &c == backup.detachedClause
-            ) {
-                #ifdef RESTORE_FULL
-                printf("Skipping over conflicting with clause %p\n", backup.detachedClause);
-                #endif
-                goto here;
-            }
-
-            if (backup.running
-                && c.learnt()
-                && backup.stage == 2
-                && decisionLevel() > 0
-            ) {
-                #ifdef DEBUG_CONFLICTS
-                printf("clause final:");
-                printClause(c);
-                #endif //#ifdef DEBUG_CONFLICTS
-
-                //printf("final pointer: %p\n", &c);
-                assert(&c == backup.detachedClause);
-                backup.stage = 0;
-                #ifdef RESTORE_FULL
-                printf("Now clause %p is making the conflict it wanted to make earlier. declevel: %d trail: %d \n", backup.detachedClause, decisionLevel(), trail.size());
-                //printClause(*backup.detachedClause);
-                #endif
-                assert(backup.decisions <= decisions);
-                assert(backup.propagations <= propagations);
-
-                c.getGainedProps() += (propagations + num_props - backup.propagations - backup.num_props);
-                c.getGainedBogoProps() += (bogoProps - backup.bogoProps);
-                c.getGainedDecisions() += (decisions - backup.decisions);
-                #ifdef DEBUG_DECLEVELGAIN
-                if (backup.decisions < decisions) {
-                    fprintf(stderr, "gained declevel: %d\n", (int)(decisions - backup.decisions));
-                }
-                #endif //DEBUG_DECLEVELGAIN
-                c.getNumConflicted()++;
-
-                //Restore misc state
-                propagations = backup.propagations;
-                bogoProps = backup.bogoProps;
-                decisions = backup.decisions;
-                simpDB_props = backup.simpDB_props;
-                random_seed = backup.random_seed;
-                polarity = backup.polarity;
-                num_props = backup.num_props;
-
-                order_heap = backup.order_heap;
-                backup.detachedClause = NULL;
-            }
-
-            if (backup.stage == 1) {
-                #ifdef DEBUG_CONFLICTS
-                printf("clause middle:");
-                printClause(c);
-                //printf("middle pointer: %p\n", &c);
-                #endif //#ifdef DEBUG_CONFLICTS
-            }
-
-            confl = &c;
-            qhead = trail.size();
-            // Copy the remaining watches:
-            while (i < end)
-                *j++ = *i++;
         } else {
             uncheckedEnqueue(first, &c);
             #ifdef DYNAMICNBLEVEL
@@ -815,7 +818,6 @@ Clause* Solver::propagate() {
                 }
            }
             #endif
-            here:;
         }
       }
       FoundWatch:;
@@ -865,16 +867,18 @@ struct gainedSorter {
 
 void Solver::printClauseUsefulnessStats()
 {
+    static int cleanNo = 0;
     vec<Clause*> backupLearnts;
     backupLearnts = learnts;
     sort(backupLearnts, gainedSorter());
 
-    printf("Clause usefulness stats:\n");
+    printf("c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
     for(int i = 0; i < backupLearnts.size(); i++) {
         Clause* c = backupLearnts[i];
-        printf("Clause size %d glue %d numConflicted %d gainedProps %d gainedBogoProps %d gainedDecisions %d\n", c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
+        printf("INSERT INTO data(cleanno, size, glue, conflicts, props, bogoprops, decisions) VALUES(%d, %d, %d, %d, %d, %d. %d);\n", cleanNo, c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
     }
-    printf("End of this round of database cleaning\n");
+    printf("c End of this round of database cleaning\n");
+    cleanNo++;
 }
 
 

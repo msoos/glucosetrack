@@ -212,6 +212,7 @@ protected:
     void     uncheckedEnqueue (Lit p, Clause* from = NULL);                            // Enqueue a literal. Assumes value of literal is undefined.
     bool     enqueue          (Lit p, Clause* from = NULL);                            // Test if fact 'p' contradicts current state, enqueue otherwise.
     Clause*  propagate        ();                                                      // Perform unit propagation. Returns possibly conflicting clause.
+    bool     handleConflict   (Clause& c, int& num_props);
     void     cancelUntil      (int level);                                             // Backtrack until a certain level.
     void     fullCancelUntil  (int level, int sublevel);
     void     analyze          (Clause* confl, vec<Lit>& out_learnt, int& out_btlevel,int &nblevels,int &merged); // (bt = backtrack)
