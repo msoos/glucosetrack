@@ -146,6 +146,7 @@ protected:
         int num_props;
     };
     BackupData backup;
+    uint64_t clIndex; //Every clause has a unique index (starting from 0)
 
     struct WatchesBackup
     {

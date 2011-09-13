@@ -101,6 +101,7 @@ const lbool l_Undef = toLbool( 0);
 
 
 class Clause {
+    uint64_t index;
     uint32_t gainedProps;
     uint32_t gainedDecisions;
     uint32_t gainedBogoProps;
@@ -119,11 +120,12 @@ public:
 
     // NOTE: This constructor cannot be used directly (doesn't allocate enough memory).
     template<class V>
-    Clause(const V& ps, bool learnt) :
+    Clause(const V& ps, const uint64_t _index, bool learnt) :
         gainedDecisions(0)
         , gainedProps(0)
         , gainedBogoProps(0)
         , numConflicted(0)
+        , index(_index)
     {
         size_etc = (ps.size() << 3) | (uint32_t)learnt;
         oldSize = ps.size();
@@ -133,11 +135,11 @@ public:
 
     // -- use this function instead:
     template<class V>
-    friend Clause* Clause_new(const V& ps, bool learnt = false) {
+    friend Clause* Clause_new(const V& ps, const uint64_t index, bool learnt) {
         assert(sizeof(Lit)      == sizeof(uint32_t));
         assert(sizeof(float)    == sizeof(uint32_t));
         void* mem = malloc(sizeof(Clause) + 2*sizeof(uint32_t)*(ps.size()));
-        return new (mem) Clause(ps, learnt); }
+        return new (mem) Clause(ps, index, learnt); }
 
     int          size        ()      const   { return size_etc >> 3; }
     void         shrink      (int i)         { assert(i <= size()); size_etc = (((size_etc >> 3) - i) << 3) | (size_etc & 7); }
@@ -176,6 +178,21 @@ public:
     uint32_t& getNumConflicted()
     {
         return numConflicted;
+    }
+
+    //Get unique index of the clause
+    uint64_t getIndex() const
+    {
+        return index;
+    }
+
+    //Clear stats from tracking
+    void clearStats()
+    {
+        gainedBogoProps = 0;
+        gainedDecisions = 0;
+        gainedProps = 0;
+        numConflicted = 0;
     }
 
     void saveLiterals()

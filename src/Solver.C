@@ -21,6 +21,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "Sort.h"
 #include <cmath>
 #include "constants.h"
+#include <iostream>
 
 double  nof_learnts;
 //=================================================================================================
@@ -96,6 +97,7 @@ Solver::Solver() :
   , random_seed      (91648253)
   , progress_estimate(0)
   , remove_satisfied (true)
+  , clIndex(0)
 {MYFLAG = 0;}
 
 
@@ -166,7 +168,7 @@ bool Solver::addClause(vec<Lit>& ps)
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == NULL);
     }else{
-        Clause* c = Clause_new(ps, false);
+        Clause* c = Clause_new(ps, clIndex++, false);
         clauses.push(c);
         attachClause(*c);
     }
@@ -872,12 +874,23 @@ void Solver::printClauseUsefulnessStats()
     backupLearnts = learnts;
     sort(backupLearnts, gainedSorter());
 
-    printf("c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
+    fprintf(stderr, "c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
     for(int i = 0; i < backupLearnts.size(); i++) {
         Clause* c = backupLearnts[i];
-        printf("INSERT INTO data(cleanno, size, glue, conflicts, props, bogoprops, decisions) VALUES(%d, %d, %d, %d, %d, %d, %d);\n", cleanNo, c->size(), c->activity(), (int)c->getNumConflicted(), (int)c->getGainedProps(), (int)c->getGainedBogoProps(), (int)c->getGainedDecisions());
+        std::cout << "INSERT INTO data(cleanno, idx, size, glue, conflicts, props, bogoprops, decisions) VALUES("
+        << cleanNo << " , "
+        << c->getIndex() << " , "
+        << c->size() << " , "
+        << c->activity()  << " , "
+        << c->getNumConflicted()  << " , "
+        << c->getGainedProps()  << " , "
+        << c->getGainedBogoProps() << " , "
+        << c->getGainedDecisions()
+        << ");" << std::endl;
+
+        c->clearStats();
     }
-    printf("c End of this round of database cleaning\n");
+    fprintf(stderr, "c End of this round of database cleaning\n");
     cleanNo++;
 }
 
@@ -1022,7 +1035,7 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
               uncheckedEnqueue(learnt_clause[0]);
               nbUn++;
             }else{
-              Clause* c = Clause_new(learnt_clause, true);
+              Clause* c = Clause_new(learnt_clause, clIndex++, true);
               learnts.push(c);
               c->setActivity(nblevels); // LS
               if(nblevels<=2) nbDL2++;
