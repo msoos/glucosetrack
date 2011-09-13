@@ -31,26 +31,16 @@ DROP TABLE IF EXISTS `data`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `data` (
-  `index` int(11) NOT NULL AUTO_INCREMENT,
   `cleanno` int(11) NOT NULL,
+  `idx` bigint(20) NOT NULL,
   `size` int(11) NOT NULL,
   `glue` int(11) NOT NULL,
   `conflicts` int(11) NOT NULL,
   `props` int(11) NOT NULL,
   `bogoprops` int(11) NOT NULL,
-  `decisions` int(11) NOT NULL,
-  PRIMARY KEY (`index`)
-) ENGINE=MyISAM AUTO_INCREMENT=127040 DEFAULT CHARSET=latin1;
+  `decisions` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `data`
---
-
-LOCK TABLES `data` WRITE;
-/*!40000 ALTER TABLE `data` DISABLE KEYS */;
-/*!40000 ALTER TABLE `data` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -61,4 +51,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2011-09-09 14:26:35
+-- Dump completed on 2011-09-13 14:43:00

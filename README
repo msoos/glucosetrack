@@ -5,11 +5,24 @@ $ make
 
 You can use this program like glucose:
 
-./glucose.sh problemname.cnf
+$ ./glucose.sh problemname.cnf
 
-The output, however, will regularly contain learnt clause sets with
-their usefulness measures
-
-NOTE: if you want to use the 'glucose_track' in standalone mode, please
+If you want to use the 'glucose_track' in standalone mode, please
 don't forget to add the '-track' option. Without it, the program will
-not measure usefulness
+not measure usefulness.
+
+The output contains stuff that is printed to the STDERR, which is for
+your own amusement (especially the % ready part), but the tracking info
+is printed to STDOUT, which you can easily capture like this:
+
+$ ./glucose_track -track mycnf.cnf > myinserts
+
+You then need to import 'myinserts' like this:
+
+$ mysql -u myname -p mypass -D glucosetrack < myinserts
+
+and then you can play around with the results as you wish. Please note
+that you may need to clear the database before you import the new dataset.
+To do that, issue the SQL command:
+
+DELETE FROM data

@@ -1,0 +1,1 @@
+mysqldump -d -u USER -pPASS -B glucosetrack > sqltables.sql
