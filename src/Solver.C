@@ -24,6 +24,11 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
 
 double  nof_learnts;
 //=================================================================================================
@@ -100,6 +105,7 @@ Solver::Solver() :
   , progress_estimate(0)
   , remove_satisfied (true)
   , clIndex(0)
+  , cleanNo(0)
 {
     MYFLAG = 0; //No comment ;)
 }
@@ -109,6 +115,15 @@ void Solver::setFileName(const char* filename)
     std::stringstream ss;
     ss << filename << "-usefulness-dump.gz";
     dumpFile.open(ss.str().c_str());
+
+    int randomData = open("/dev/random", O_RDONLY);
+    read(randomData, &runID, sizeof(runID));
+    close(randomData);
+
+    dumpFile << "INSERT INTO runs(runID, filename) VALUES("
+    << runID << ","
+    << "\"" << filename << "\""
+    ");" << std::endl;
 }
 
 
@@ -881,7 +896,6 @@ struct gainedSorter {
 
 void Solver::printClauseUsefulnessStats()
 {
-    static int cleanNo = 0;
     vec<Clause*> backupLearnts;
     backupLearnts = learnts;
     sort(backupLearnts, gainedSorter());
@@ -889,22 +903,25 @@ void Solver::printClauseUsefulnessStats()
     fprintf(stderr, "c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
     for(int i = 0; i < backupLearnts.size(); i++) {
         Clause* c = backupLearnts[i];
-        dumpFile << "INSERT INTO data(cleanno, idx, time, size, glue, conflicts, props, bogoprops, decisions) VALUES("
-        << cleanNo << " , "
-        << c->getIndex() << " , "
-        << c->getNumConflictsAtCreation() << ", "
-        << c->size() << " , "
-        << c->activity()  << " , "
-        << c->getNumConflicted()  << " , "
-        << c->getGainedProps()  << " , "
-        << c->getGainedBogoProps() << " , "
+        dumpFile << "INSERT INTO clean_data(runID, cleanno, idx, glue, conflicts, props, bogoprops, decisions) VALUES("
+        << runID << " ,"
+        << cleanNo << " ,"
+        << c->getIndex() << ","
+        << c->activity()  << ","
+        << c->getNumConflicted()  << ","
+        << c->getGainedProps()  << ","
+        << c->getGainedBogoProps() << ","
         << c->getGainedDecisions()
         << ");" << std::endl;
 
-        c->clearStats();
+        //c->clearStats();
     }
     fprintf(stderr, "c End of this round of database cleaning\n");
     cleanNo++;
+    dumpFile << "INSERT INTO clean_run(runID, cleanno, time) data("
+    << runID << ","
+    << cleanNo << ","
+    << conflicts << ");" << std::endl;
 }
 
 
@@ -1049,6 +1066,13 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
               nbUn++;
             }else{
               Clause* c = Clause_new(learnt_clause, clIndex++, conflicts, true);
+              dumpFile << "INSERT INTO clausedata(runID, idx, timeofcreation, size) VALUES("
+              << runID << ","
+              << c->getIndex() << ","
+              << c->getTimeOfCreation() << ","
+              << c->size()
+              << ");" << std::endl;
+
               learnts.push(c);
               c->setActivity(nblevels); // LS
               if(nblevels<=2) nbDL2++;

@@ -160,6 +160,8 @@ protected:
     void printClauseUsefulnessStats();
     void saveState();
     ogzstream dumpFile;
+    unsigned runID;
+    unsigned cleanNo;
 
     // Solver state:
     //

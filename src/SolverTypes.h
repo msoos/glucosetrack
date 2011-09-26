@@ -102,7 +102,7 @@ const lbool l_Undef = toLbool( 0);
 
 class Clause {
     uint64_t index; //Unique clause index
-    uint64_t numConflictsAtCreation;
+    uint64_t timeOfCreation; //Number of conflicts at creation
 
     //Usefulness stats
     uint32_t gainedProps;
@@ -127,7 +127,7 @@ public:
     template<class V>
     Clause(const V& ps, const uint64_t _index, const uint64_t _numConflAtCreate, bool learnt) :
         index(_index)
-        , numConflictsAtCreation(_numConflAtCreate)
+        , timeOfCreation(_numConflAtCreate)
         , gainedDecisions(0)
         , gainedProps(0)
         , gainedBogoProps(0)
@@ -192,9 +192,9 @@ public:
         return index;
     }
 
-    uint64_t getNumConflictsAtCreation()
+    uint64_t getTimeOfCreation()
     {
-        return numConflictsAtCreation;
+        return timeOfCreation;
     }
 
     //Clear stats from tracking
