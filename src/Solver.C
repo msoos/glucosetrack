@@ -22,6 +22,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <cmath>
 #include "constants.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 double  nof_learnts;
 //=================================================================================================
@@ -98,7 +100,17 @@ Solver::Solver() :
   , progress_estimate(0)
   , remove_satisfied (true)
   , clIndex(0)
-{MYFLAG = 0;}
+{
+    MYFLAG = 0; //No comment ;)
+}
+
+void Solver::setFileName(const char* filename)
+{
+    std::stringstream ss;
+    ss << filename << "-usefulness-dump.gz";
+    dumpFile.open(ss.str().c_str());
+}
+
 
 
 Solver::~Solver()
@@ -877,7 +889,7 @@ void Solver::printClauseUsefulnessStats()
     fprintf(stderr, "c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
     for(int i = 0; i < backupLearnts.size(); i++) {
         Clause* c = backupLearnts[i];
-        std::cout << "INSERT INTO data(cleanno, idx, size, glue, conflicts, props, bogoprops, decisions) VALUES("
+        dumpFile << "INSERT INTO data(cleanno, idx, size, glue, conflicts, props, bogoprops, decisions) VALUES("
         << cleanNo << " , "
         << c->getIndex() << " , "
         << c->size() << " , "

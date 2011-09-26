@@ -27,6 +27,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "Vec.h"
 #include "Heap.h"
 #include "Alg.h"
+#include "gzstream.h"
 
 #include "SolverTypes.h"
 #include "BoundedQueue.h"
@@ -88,6 +89,7 @@ public:
     bool      expensive_ccmin;    // Controls conflict clause minimization.                                                    (default TRUE)
     int       polarity_mode;      // Controls which polarity the decision heuristic chooses. See enum below for allowed modes. (default polarity_false)
     int       verbosity;          // Verbosity level. 0=silent, 1=some progress report                                         (default 0)
+    void      setFileName(const char* filename);
 
     enum { polarity_true = 0, polarity_false = 1, polarity_user = 2, polarity_rnd = 3 };
 
@@ -157,6 +159,7 @@ protected:
     WatchesBackup watchBackup;
     void printClauseUsefulnessStats();
     void saveState();
+    ogzstream dumpFile;
 
     // Solver state:
     //

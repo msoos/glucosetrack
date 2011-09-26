@@ -19,6 +19,10 @@ find_package(ZLIB  REQUIRED)
 link_directories( ${ZLIB_LIBRARY} )
 include_directories( ${ZLIB_INCLUDE_DIR} )
 
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/gzstream)
+
+
+add_subdirectory(gzstream)
 add_subdirectory(src)
 add_subdirectory(SatELite)
 

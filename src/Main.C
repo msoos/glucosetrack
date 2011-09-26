@@ -293,6 +293,7 @@ int main(int argc, char** argv)
             argv[j++] = argv[i];
     }
     argc = j;
+    S.setFileName(argv[1]);
 
 
     reportf("c This is glucose 1.0  with usefulness tracking by\n");
@@ -311,8 +312,11 @@ int main(int argc, char** argv)
     signal(SIGHUP,SIGINT_handler);
     signal(SIGXCPU,SIGINT_handler);
 
-    if (argc == 1)
-        reportf("Reading from standard input... Use '-h' or '--help' for help.\n");
+    if (argc == 1) {
+        //reportf("Reading from standard input... Use '-h' or '--help' for help.\n");
+        reportf("Sorry, but we cannot read from starnard input, that's glucose's job ;)\n");
+        exit(-1);
+    }
 
     gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
     if (in == NULL)
@@ -362,7 +366,7 @@ int main(int argc, char** argv)
       }
     }
 
-#ifdef NDEBUG
-    exit(ret ? 10 : 20);     // (faster than "return", which will invoke the destructor for 'Solver')
-#endif
+//#ifdef NDEBUG
+    //exit(ret ? 10 : 20);     // (faster than "return", which will invoke the destructor for 'Solver')
+//#endif
 }

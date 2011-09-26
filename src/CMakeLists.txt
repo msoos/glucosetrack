@@ -5,5 +5,6 @@ add_executable(glucose_track
 
 target_link_libraries(glucose_track
     ${ZLIB_LIBRARY}
+    gzstream
 )
 
