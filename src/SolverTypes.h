@@ -101,11 +101,16 @@ const lbool l_Undef = toLbool( 0);
 
 
 class Clause {
-    uint64_t index;
+    uint64_t index; //Unique clause index
+    uint64_t numConflictsAtCreation;
+
+    //Usefulness stats
     uint32_t gainedProps;
     uint32_t gainedDecisions;
     uint32_t gainedBogoProps;
     uint32_t numConflicted;
+
+    //Standard stats
     uint32_t size_etc;
     union { int act; uint32_t abst; } extra;
     uint32_t oldSize;
@@ -120,12 +125,13 @@ public:
 
     // NOTE: This constructor cannot be used directly (doesn't allocate enough memory).
     template<class V>
-    Clause(const V& ps, const uint64_t _index, bool learnt) :
-        gainedDecisions(0)
+    Clause(const V& ps, const uint64_t _index, const uint64_t _numConflAtCreate, bool learnt) :
+        index(_index)
+        , numConflictsAtCreation(_numConflAtCreate)
+        , gainedDecisions(0)
         , gainedProps(0)
         , gainedBogoProps(0)
         , numConflicted(0)
-        , index(_index)
     {
         size_etc = (ps.size() << 3) | (uint32_t)learnt;
         oldSize = ps.size();
@@ -135,11 +141,11 @@ public:
 
     // -- use this function instead:
     template<class V>
-    friend Clause* Clause_new(const V& ps, const uint64_t index, bool learnt) {
+    friend Clause* Clause_new(const V& ps, const uint64_t index,const uint64_t numConflAtCreate, bool learnt) {
         assert(sizeof(Lit)      == sizeof(uint32_t));
         assert(sizeof(float)    == sizeof(uint32_t));
         void* mem = malloc(sizeof(Clause) + 2*sizeof(uint32_t)*(ps.size()));
-        return new (mem) Clause(ps, index, learnt); }
+        return new (mem) Clause(ps, index, numConflAtCreate, learnt); }
 
     int          size        ()      const   { return size_etc >> 3; }
     void         shrink      (int i)         { assert(i <= size()); size_etc = (((size_etc >> 3) - i) << 3) | (size_etc & 7); }
@@ -184,6 +190,11 @@ public:
     uint64_t getIndex() const
     {
         return index;
+    }
+
+    uint64_t getNumConflictsAtCreation()
+    {
+        return numConflictsAtCreation;
     }
 
     //Clear stats from tracking

@@ -180,7 +180,7 @@ bool Solver::addClause(vec<Lit>& ps)
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == NULL);
     }else{
-        Clause* c = Clause_new(ps, clIndex++, false);
+        Clause* c = Clause_new(ps, clIndex++, conflicts, false);
         clauses.push(c);
         attachClause(*c);
     }
@@ -889,9 +889,10 @@ void Solver::printClauseUsefulnessStats()
     fprintf(stderr, "c Cleaning clauses (clean number %d). Current Clause usefulness stats:\n", cleanNo);
     for(int i = 0; i < backupLearnts.size(); i++) {
         Clause* c = backupLearnts[i];
-        dumpFile << "INSERT INTO data(cleanno, idx, size, glue, conflicts, props, bogoprops, decisions) VALUES("
+        dumpFile << "INSERT INTO data(cleanno, idx, time, size, glue, conflicts, props, bogoprops, decisions) VALUES("
         << cleanNo << " , "
         << c->getIndex() << " , "
+        << c->getNumConflictsAtCreation() << ", "
         << c->size() << " , "
         << c->activity()  << " , "
         << c->getNumConflicted()  << " , "
@@ -1047,7 +1048,7 @@ lbool Solver::search(int nof_conflicts, int nof_learnts)
               uncheckedEnqueue(learnt_clause[0]);
               nbUn++;
             }else{
-              Clause* c = Clause_new(learnt_clause, clIndex++, true);
+              Clause* c = Clause_new(learnt_clause, clIndex++, conflicts, true);
               learnts.push(c);
               c->setActivity(nblevels); // LS
               if(nblevels<=2) nbDL2++;
