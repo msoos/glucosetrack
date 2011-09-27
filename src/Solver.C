@@ -918,7 +918,7 @@ void Solver::printClauseUsefulnessStats()
     }
     fprintf(stderr, "c End of this round of database cleaning\n");
     cleanNo++;
-    dumpFile << "INSERT INTO clean_run(runID, cleanno, time) data("
+    dumpFile << "INSERT INTO clean_run(runID, cleanno, time) VALUES("
     << runID << ","
     << cleanNo << ","
     << conflicts << ");" << std::endl;
